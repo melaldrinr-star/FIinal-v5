@@ -1,0 +1,104 @@
+﻿node.exe : npm notice run inventory-backend@1.0.0 test
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\Paolo Amor P. Palma\Ap ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm notice run ...kend@1.0.0 test:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+npm notice run jest --runInBand rollback.test.ts
+  console.error
+    [POST /api/cms-settings/versions/:id/rollback] Error: {
+      error: Error: does not belong to this tenant
+          at Object.<anonymous> (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\src\app\api\cms-settings\versions\__tests__\rollback.test.ts:445:9)
+          at Promise.finally.completed (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:1561:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:1501:10)
+          at _callCircusTest (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:1011:40)
+          at _runTest (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:951:3)
+          at C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:853:7
+          at _runTestsForDescribeBlock (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:866:11)
+          at _runTestsForDescribeBlock (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+          at _runTestsForDescribeBlock (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:861:11)
+          at run (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:765:3)
+          at runAndTransformResultsToJestFormat (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\jestAdapterInit.js:1993:21)
+          at jestAdapter (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-circus\build\runner.js:111:19)
+          at runTestInternal (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-runner\build\index.js:276:16)
+          at runTest (C:\Users\Paolo Amor P. Palma\Downloads\bmdc1.1-main\Backend\node_modules\jest-runner\build\index.js:344:7),
+      message: 'does not belong to this tenant',
+      stack: 'Error: does not belong to this tenant\n' +
+        '    at Object.<anonymous> (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\src\\app\\api\\cms-settings\\versions\\__tests__\\rollback.test.ts:445:9)\n' +
+        '    at Promise.finally.completed (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1561:28)\n' +
+        '    at new Promise (<anonymous>)\n' +
+        '    at callAsyncCircusFn (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1501:10)\n' +
+        '    at _callCircusTest (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1011:40)\n' +
+        '    at _runTest (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:951:3)\n' +
+        '    at C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:853:7\n' +
+        '    at _runTestsForDescribeBlock (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:866:11)\n' +
+        '    at _runTestsForDescribeBlock (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:861:11)\n' +
+        '    at _runTestsForDescribeBlock (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:861:11)\n' +
+        '    at run (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:765:3)\n' +
+        '    at runAndTransformResultsToJestFormat (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\jestAdapterInit.js:1993:21)\n' +
+        '    at jestAdapter (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-circus\\build\\runner.js:111:19)\n' +
+        '    at runTestInternal (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-runner\\build\\index.js:276:16)\n' +
+        '    at runTest (C:\\Users\\Paolo Amor P. Palma\\Downloads\\bmdc1.1-main\\Backend\\node_modules\\jest-runner\\build\\index.js:344:7)'
+    }
+
+    [0m [90m 114 |[39m
+     [90m 115 |[39m     [90m// Log the error for debugging[39m
+    [31m[1m>[22m[39m[90m 116 |[39m     console[33m.[39merror([32m'[POST /api/cms-settings/versions/:id/rollback] Error:'[39m[33m,[39m {
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 117 |[39m       error[33m,[39m
+     [90m 118 |[39m       message[33m:[39m errorMessage[33m,[39m
+     [90m 119 |[39m       stack[33m:[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mstack [33m:[39m undefined[33m,[39m[0m
+
+      at src/app/api/cms-settings/versions/[id]/rollback/route.ts:116:13
+      at Object.<anonymous> (src/app/api/cms-settings/versions/__tests__/rollback.test.ts:452:22)
+
+FAIL src/app/api/cms-settings/versions/__tests__/rollback.test.ts
+  POST /api/cms-settings/versions/:id/rollback - Rollback Endpoint Tests
+    Authentication & Authorization
+      ΓêÜ should return 401 Unauthorized when no authentication token provided (4 ms)
+      ΓêÜ should return 403 Forbidden when user role is not admin (1 ms)
+      ΓêÜ should allow superadmin role to rollback (1 ms)
+    Request Validation
+      ΓêÜ should return 400 Bad Request when version ID is missing (1 ms)
+      ΓêÜ should return 400 Bad Request when version ID is empty string
+      ΓêÜ should reject platform tenant context
+    Tenant Isolation
+      ΓêÜ should verify version belongs to current tenant before rollback (1 ms)
+      ├ù should check tenant isolation when rollback is called (1 ms)
+    Rollback Functionality
+      ΓêÜ should successfully rollback to previous version (2 ms)
+      ΓêÜ should return 404 when version not found (1 ms)
+      ΓêÜ should create new version record for rollback action
+      ΓêÜ should create audit log entry with action=rollback (1 ms)
+    Error Handling
+      ΓêÜ should handle tenant mismatch errors with 403 response (18 ms)
+      ΓêÜ should log errors for debugging (1 ms)
+    Response Format
+      ΓêÜ should return 200 with restored settings on successful rollback (1 ms)
+      ΓêÜ should return settings with all expected fields after rollback (1 ms)
+
+  ΓùÅ POST /api/cms-settings/versions/:id/rollback - Rollback Endpoint Tests ΓÇ║ Tenant Isolation ΓÇ║ should check tenant isolation when rollback 
+is called
+
+    expect(jest.fn()).toHaveBeenCalled()
+
+    Expected number of calls: >= 1
+    Received number of calls:    0
+
+    [0m [90m 334 |[39m
+     [90m 335 |[39m       [90m// Verify that the service layer was called[39m
+    [31m[1m>[22m[39m[90m 336 |[39m       expect(mockCMSService[33m.[39mrollbackToVersion)[33m.[39mtoHaveBeenCalled()[33m;[39m
+     [90m     |[39m                                                [31m[1m^[22m[39m
+     [90m 337 |[39m       expect(result[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m 338 |[39m     })[33m;[39m
+     [90m 339 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (src/app/api/cms-settings/versions/__tests__/rollback.test.ts:336:48)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 15 passed, 16 total
+Snapshots:   0 total
+Time:        0.423 s, estimated 1 s
+Ran all test suites matching rollback.test.ts.

@@ -1,0 +1,250 @@
+npm notice run inventory-backend@1.0.0 test
+npm notice run jest --runInBand src/app/api/trainee-status/__tests__/all-endpoints.test.ts --passWithNoTests --testTimeout=10000
+FAIL src/app/api/trainee-status/__tests__/all-endpoints.test.ts (14.67 s)
+  Endpoint 1.2: GET /api/trainee-status/enrollment/{enrollmentId} - Single Status Record
+    Requirement 1.0 - Display Trainee Status Records
+      Query filtering and retrieval
+        ΓêÜ Γ£ô should filter by enrollment_id (1 ms)
+        ΓêÜ Γ£ô should filter by tenant_id for data isolation
+        ΓêÜ Γ£ô should exclude soft-deleted records (deleted_at IS NULL)
+      Response structure
+        ΓêÜ Γ£ô should return single record with all fields
+        ΓêÜ Γ£ô should return related trainee data (1 ms)
+        ΓêÜ Γ£ô should return null when record does not exist
+    Requirement 12.0 - Data Isolation by Tenant
+      Tenant filtering
+        ├ù Γ£ô should use tenant_id parameter in query (7092 ms)
+        ├ù Γ£ô should return null for cross-tenant access attempts (7068 ms)
+        ΓêÜ Γ£ô should never leak data across tenant boundaries (3 ms)
+    Authorization errors
+      ΓêÜ Γ£ô returns 401 Unauthorized when authentication is missing (1 ms)
+      ΓêÜ Γ£ô returns 403 Forbidden when tenant context is missing (2 ms)
+      ΓêÜ Γ£ô returns 404 Not Found when record does not exist (1 ms)
+    Field validation
+      ΓêÜ Γ£ô should include graduation_status field (1 ms)
+      ΓêÜ Γ£ô should include employment_status field (2 ms)
+      ΓêÜ Γ£ô should include skills_match field (1 ms)
+      ΓêÜ Γ£ô should include audit fields (recorded_by, recorded_at, last_updated_by, updated_at) (1 ms)
+  Endpoint 1.3: GET /api/trainee-status - Multiple Records with Filtering and Pagination
+    Requirement 3.0 - Display Status in Table Layout
+      Filtering - Employment Status
+        ΓêÜ Γ£ô should filter by employment_status when provided (2 ms)
+        ΓêÜ Γ£ô should support multiple employment status values with AND logic (2 ms)
+        ΓêÜ Γ£ô should accept comma-separated employment status values (4 ms)
+      Filtering - Skills Match
+        ΓêÜ Γ£ô should filter by skills_match when provided (1 ms)
+        ΓêÜ Γ£ô should support multiple skills_match values (1 ms)
+        ΓêÜ Γ£ô should accept comma-separated skills_match values (1 ms)
+      Filtering - Graduation Status
+        ΓêÜ Γ£ô should filter by graduation_status when provided (1 ms)
+        ΓêÜ Γ£ô should support multiple graduation_status values (1 ms)
+        ΓêÜ Γ£ô should accept comma-separated graduation_status values (2 ms)
+      Filtering - Combined with AND Logic
+        ΓêÜ Γ£ô should combine filters with AND logic (1 ms)
+        ΓêÜ Γ£ô should return empty array when no records match all criteria (1 ms)
+        ΓêÜ Γ£ô should work with empty filter arrays (2 ms)
+        ΓêÜ Γ£ô should work with missing filter parameters (2 ms)
+      Sorting - Column Selection
+        ΓêÜ Γ£ô should support sorting by name (1 ms)
+        ΓêÜ Γ£ô should support sorting by graduation_date (2 ms)
+        ΓêÜ Γ£ô should support sorting by employment_status (1 ms)
+        ΓêÜ Γ£ô should support sorting by skills_match (1 ms)
+        ΓêÜ Γ£ô should support sorting by recorded_at (1 ms)
+        ΓêÜ Γ£ô should default to recorded_at if sort_by not provided (2 ms)
+      Sorting - Direction
+        ΓêÜ Γ£ô should support ascending sort order (1 ms)
+        ΓêÜ Γ£ô should support descending sort order (2 ms)
+        ΓêÜ Γ£ô should default to desc if sort_dir not provided (2 ms)
+      Pagination
+        ΓêÜ Γ£ô should parse page parameter with minimum of 1 (2 ms)
+        ΓêÜ Γ£ô should parse limit parameter with default of 20 (1 ms)
+        ΓêÜ Γ£ô should enforce maximum limit of 100 (1 ms)
+        ΓêÜ Γ£ô should enforce minimum limit of 1 (2 ms)
+        ΓêÜ Γ£ô should return pagination metadata (page, limit, total, hasMore) (8 ms)
+        ΓêÜ Γ£ô should calculate hasMore correctly (2 ms)
+        ΓêÜ Γ£ô should return only records matching page and limit (1 ms)
+      Response structure
+        ΓêÜ Γ£ô should return array of records (2 ms)
+        ΓêÜ Γ£ô should include pagination metadata in response (1 ms)
+    Requirement 12.0 - Data Isolation by Tenant
+      ΓêÜ Γ£ô should filter all results by tenant_id
+      ΓêÜ Γ£ô should never return records from other tenants (2 ms)
+    Authorization errors
+      ΓêÜ Γ£ô returns 401 Unauthorized when authentication is missing (1 ms)
+      ΓêÜ Γ£ô returns 403 Forbidden when tenant context is missing (1 ms)
+      ΓêÜ Γ£ô returns 400 Bad Request for invalid query parameters (1 ms)
+    Requirement 16.0 - Support Filtering by Multiple Criteria
+      ΓêÜ Γ£ô supports employment status filtering (1 ms)
+      ΓêÜ Γ£ô supports skills match filtering (1 ms)
+      ΓêÜ Γ£ô supports graduation status filtering (1 ms)
+      ΓêÜ Γ£ô applies AND logic when combining filters (1 ms)
+      ΓêÜ Γ£ô allows clearing individual filters (2 ms)
+    Requirement 17.0 - Support Sorting on Table Columns
+      ΓêÜ Γ£ô supports sorting on trainee name
+      ΓêÜ Γ£ô supports sorting on graduation date
+      ΓêÜ Γ£ô supports sorting on employment status (1 ms)
+      ΓêÜ Γ£ô supports sorting on skills match (11 ms)
+      ΓêÜ Γ£ô supports sorting on recorded date
+      ΓêÜ Γ£ô supports ascending sort direction
+      ΓêÜ Γ£ô supports descending sort direction
+      ΓêÜ Γ£ô returns correctly sorted results (1 ms)
+  Endpoint 1.4: PATCH /api/trainee-status/{recordId} - Update Status Record
+    Request validation
+      Employment status validation
+        ΓêÜ Γ£ô accepts valid employment status values (13 ms)
+        ΓêÜ Γ£ô requires job_title when employment_status is "employed" (3 ms)
+        ΓêÜ Γ£ô requires employer_name when employment_status is "employed" (1 ms)
+        ΓêÜ Γ£ô requires job_title and employer_name when employment_status is "self_employed" (3 ms)
+        ΓêÜ Γ£ô requires unemployment_reason when employment_status is "unemployed" (1 ms)
+        ΓêÜ Γ£ô does not require job fields when employment_status is "pursuing_education" (1 ms)
+        ΓêÜ Γ£ô does not require job fields when employment_status is "deceased"
+      Field length validation
+        ΓêÜ Γ£ô accepts job_title up to 255 characters (1 ms)
+        ΓêÜ Γ£ô rejects job_title exceeding 255 characters (2 ms)
+        ΓêÜ Γ£ô accepts unemployment_reason up to 500 characters (1 ms)
+        ΓêÜ Γ£ô rejects unemployment_reason exceeding 500 characters (1 ms)
+        ΓêÜ Γ£ô accepts remarks up to 2000 characters (3 ms)
+        ΓêÜ Γ£ô rejects remarks exceeding 2000 characters (1 ms)
+      Skills match validation
+        ΓêÜ Γ£ô accepts valid skills_match values (6 ms)
+        ΓêÜ Γ£ô accepts skills_match_percentage in range 0-100 (2 ms)
+        ΓêÜ Γ£ô accepts skills_match_percentage value 0 (2 ms)
+        ΓêÜ Γ£ô accepts skills_match_percentage value 100 (1 ms)
+        ΓêÜ Γ£ô rejects skills_match_percentage below 0 (1 ms)
+        ΓêÜ Γ£ô rejects skills_match_percentage above 100 (1 ms)
+      Graduation status validation
+        ΓêÜ Γ£ô accepts valid graduation_status values (4 ms)
+      Optional and null fields
+        ΓêÜ Γ£ô accepts null for optional fields (3 ms)
+        ΓêÜ Γ£ô allows empty updates (all fields optional) (1 ms)
+    Requirement 10.0 - Manage Status Records in Modal Editor
+      Update operation
+        ΓêÜ Γ£ô updates record with new field values (2 ms)
+        ΓêÜ Γ£ô sets last_updated_by to current user ID (1 ms)
+        ΓêÜ Γ£ô sets updated_at to current timestamp (3 ms)
+        ΓêÜ Γ£ô returns 200 with updated record on success (1 ms)
+      Field clearing on employment status transitions
+        ΓêÜ Γ£ô clears job fields when transitioning from employed to unemployed (1 ms)
+        ΓêÜ Γ£ô clears unemployment_reason when transitioning from unemployed to employed (1 ms)
+        ΓêÜ Γ£ô clears all employment fields when transitioning to pursuing_education (1 ms)
+        ΓêÜ Γ£ô clears all employment fields when transitioning to deceased
+      Validation before save
+        ΓêÜ Γ£ô returns 400 Bad Request when validation fails
+        ΓêÜ Γ£ô displays error message for each invalid field
+        ΓêÜ Γ£ô rejects update without required conditional fields
+    Requirement 6.0 - Display and Edit Employment Status
+      ΓêÜ Γ£ô updates job_title field (1 ms)
+      ΓêÜ Γ£ô updates employer_name field
+      ΓêÜ Γ£ô updates employment_status field
+    Authorization errors
+      ΓêÜ Γ£ô returns 401 Unauthorized when authentication is missing
+      ΓêÜ Γ£ô returns 403 Forbidden when missing permissions (non-coordinator) (1 ms)
+      ΓêÜ Γ£ô returns 403 Forbidden when accessing record from different tenant (1 ms)
+      ΓêÜ Γ£ô returns 404 Not Found when record does not exist
+    Requirement 12.0 - Data Isolation by Tenant
+      ΓêÜ Γ£ô verifies record belongs to authenticated user tenant before updating
+      ΓêÜ Γ£ô prevents cross-tenant updates
+  Endpoint 1.5: DELETE /api/trainee-status/{recordId} - Soft Delete Status Record
+    Requirement 14.0 - Support Soft Delete of Status Records
+      Soft delete operation
+        ΓêÜ Γ£ô sets deleted_at to current timestamp (2 ms)
+        ΓêÜ Γ£ô returns 200 on successful soft delete
+        ΓêÜ Γ£ô soft-deleted record is excluded from GET queries
+        ΓêÜ Γ£ô soft-deleted record not displayed in card view (1 ms)
+        ΓêÜ Γ£ô soft-deleted record not displayed in table view (1 ms)
+      Soft delete restrictions
+        ΓêÜ Γ£ô returns 403 Forbidden when not admin (2 ms)
+        ΓêÜ Γ£ô returns 403 Forbidden for cross-tenant deletion (1 ms)
+        ΓêÜ Γ£ô returns 404 Not Found when record does not exist (2 ms)
+        ΓêÜ Γ£ô returns 401 Unauthorized when not authenticated
+    Authorization errors
+      ΓêÜ Γ£ô verifies authentication before delete (1 ms)
+      ΓêÜ Γ£ô verifies admin role before delete (1 ms)
+      ΓêÜ Γ£ô verifies record belongs to same tenant before delete
+    Requirement 12.0 - Data Isolation by Tenant
+      ΓêÜ Γ£ô prevents cross-tenant deletion (1 ms)
+      ΓêÜ Γ£ô returns error when attempting to delete record from different tenant
+    Data integrity after soft delete
+      ΓêÜ Γ£ô soft-deleted record remains in database
+      ΓêÜ Γ£ô soft-deleted record is recoverable if needed (1 ms)
+      ΓêÜ Γ£ô multiple soft deletes do not cause errors (1 ms)
+  Integration: All Endpoints Together
+    Tenant isolation across all endpoints
+      ΓêÜ Γ£ô GET single returns null for different tenant enrollment
+      ΓêÜ Γ£ô GET multiple filters by tenant_id
+      ΓêÜ Γ£ô PATCH prevents updating record from different tenant
+      ΓêÜ Γ£ô DELETE prevents deleting record from different tenant (1 ms)
+    Soft delete consistency across endpoints
+      ΓêÜ Γ£ô After DELETE, GET single returns null (2 ms)
+      ΓêÜ Γ£ô After DELETE, GET multiple excludes record (2 ms)
+      ΓêÜ Γ£ô After DELETE, PATCH returns 404 (1 ms)
+    Field consistency across endpoints
+      ΓêÜ Γ£ô All endpoints include audit fields (recorded_by, recorded_at, last_updated_by, updated_at) (1 ms)
+      ΓêÜ Γ£ô All endpoints validate status enum values consistently (1 ms)
+      ΓêÜ Γ£ô All endpoints apply same field length constraints (1 ms)
+      ΓêÜ Γ£ô All endpoints enforce same conditional field requirements
+    Error handling consistency
+      ΓêÜ Γ£ô All endpoints return 401 for missing auth
+      ΓêÜ Γ£ô All endpoints return 403 for cross-tenant access
+      ΓêÜ Γ£ô All endpoints return 404 for missing records (1 ms)
+      ΓêÜ Γ£ô All endpoints return 400 for validation errors
+  Requirements Coverage Verification
+    Requirement 1.0: Display Trainee Status Records on Profile
+      ΓêÜ Γ£ô 1.2 GET single endpoint implemented
+      ΓêÜ Γ£ô Returns record when found (1 ms)
+      ΓêÜ Γ£ô Returns 404 when not found
+      ΓêÜ Γ£ô Filters by tenant_id
+      ΓêÜ Γ£ô Excludes soft-deleted records (1 ms)
+    Requirement 3.0: Display Status in Table Layout
+      ΓêÜ Γ£ô 1.3 GET multiple endpoint implemented (1 ms)
+      ΓêÜ Γ£ô Returns paginated list
+      ΓêÜ Γ£ô Supports employment_status filter (1 ms)
+      ΓêÜ Γ£ô Supports skills_match filter
+      ΓêÜ Γ£ô Supports graduation_status filter (1 ms)
+      ΓêÜ Γ£ô Combines filters with AND logic (1 ms)
+      ΓêÜ Γ£ô Supports sorting
+      ΓêÜ Γ£ô Respects pagination params (2 ms)
+      ΓêÜ Γ£ô Filters by tenant_id (1 ms)
+    Requirement 10.0: Manage Status Records
+      ΓêÜ Γ£ô 1.4 PATCH endpoint implemented (1 ms)
+      ΓêÜ Γ£ô Returns 200 on success (1 ms)
+      ΓêÜ Γ£ô Returns 400 on validation failure (1 ms)
+      ΓêÜ Γ£ô Returns 401 on auth failure (1 ms)
+      ΓêÜ Γ£ô Returns 403 on permission failure (1 ms)
+      ΓêÜ Γ£ô Returns 404 when not found
+      ΓêÜ Γ£ô Updates fields correctly
+      ΓêÜ Γ£ô Clears fields on status transition (1 ms)
+      ΓêÜ Γ£ô Sets last_updated_by (1 ms)
+      ΓêÜ Γ£ô Sets updated_at (1 ms)
+    Requirement 12.0: Enforce Data Isolation by Tenant
+      ΓêÜ Γ£ô Implemented in GET single (1.2) (1 ms)
+      ΓêÜ Γ£ô Implemented in GET multiple (1.3) (1 ms)
+      ΓêÜ Γ£ô Implemented in PATCH (1.4) (1 ms)
+      ΓêÜ Γ£ô Implemented in DELETE (1.5)
+      ΓêÜ Γ£ô Cross-tenant access returns error
+      ΓêÜ Γ£ô No data leakage between tenants
+    Requirement 14.0: Support Soft Delete
+      ΓêÜ Γ£ô 1.5 DELETE endpoint implemented (1 ms)
+      ΓêÜ Γ£ô Returns 200 on success (1 ms)
+      ΓêÜ Γ£ô Sets deleted_at timestamp
+      ΓêÜ Γ£ô Returns 401 on auth failure
+      ΓêÜ Γ£ô Returns 403 on admin check
+      ΓêÜ Γ£ô Returns 404 when not found
+      ΓêÜ Γ£ô Prevents cross-tenant deletion (1 ms)
+      ΓêÜ Γ£ô Soft-deleted record excluded from GET (1 ms)
+
+  ΓùÅ Endpoint 1.2: GET /api/trainee-status/enrollment/{enrollmentId} - Single Status Record ΓÇ║ Requirement 12.0 - Data Isolation by Tenant ΓÇ║ Tenant filtering ΓÇ║ Γ£ô should use tenant_id parameter in query
+
+    TypeError: fetch failed
+
+
+  ΓùÅ Endpoint 1.2: GET /api/trainee-status/enrollment/{enrollmentId} - Single Status Record ΓÇ║ Requirement 12.0 - Data Isolation by Tenant ΓÇ║ Tenant filtering ΓÇ║ Γ£ô should return null for cross-tenant access attempts
+
+    TypeError: fetch failed
+
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 175 passed, 177 total
+Snapshots:   0 total
+Time:        14.874 s, estimated 15 s
+Ran all test suites matching src/app/api/trainee-status/__tests__/all-endpoints.test.ts.
