@@ -1,0 +1,12 @@
+npm notice run bmdc-responsive-web-interface@0.1.0 test
+npm notice run vitest run TraineeStatusModal.test.tsx --run
+
+ RUN  v4.1.5 C:/Users/Paolo Amor P. Palma/Downloads/bmdc1.1-main/Frontend
+
+
+ Test Files  1 passed (1)
+      Tests  51 passed (51)
+   Start at  21:10:58
+   Duration  5.14s (transform 155ms, setup 112ms, import 337ms, tests 3.94s, environment 527ms)
+
+

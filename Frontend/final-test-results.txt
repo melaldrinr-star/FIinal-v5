@@ -1,0 +1,501 @@
+npm notice run bmdc-responsive-web-interface@0.1.0 test
+npm notice run vitest run TraineeStatus --run
+
+ RUN  v4.1.5 C:/Users/Paolo Amor P. Palma/Downloads/bmdc1.1-main/Frontend
+
+ Γ¥» src/components/trainee/TraineeStatusTable.test.tsx (38 tests | 2 failed) 1649ms
+       ├ù should render filter options for employment status 57ms
+       ├ù should display limit selector with current limit 36ms
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatus cache on successful update
+[2026-09-10T13:16:55.785Z] [INFO] [useUpdateTraineeStatus] Updating status record { recordId: 'status-123', fieldCount: 1 }
+
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatus cache on successful update
+[2026-09-10T13:16:55.785Z] [INFO] [useUpdateTraineeStatus] Update successful { recordId: 'status-123', updatedAt: '2024-01-21T15:00:00Z' }
+
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatus cache on successful update
+[2026-09-10T13:16:55.785Z] [INFO] [useUpdateTraineeStatus] Invalidating query caches 
+[2026-09-10T13:16:55.785Z] [INFO] [QueryClient] Invalidated all trainee status caches { enrollmentId: undefined }
+
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatuses cache on successful update
+[2026-09-10T13:16:56.807Z] [INFO] [useUpdateTraineeStatus] Updating status record { recordId: 'status-123', fieldCount: 1 }
+
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatuses cache on successful update
+[2026-09-10T13:16:56.808Z] [INFO] [useUpdateTraineeStatus] Update successful { recordId: 'status-123', updatedAt: '2024-01-21T15:00:00Z' }
+
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatuses cache on successful update
+[2026-09-10T13:16:56.808Z] [INFO] [useUpdateTraineeStatus] Invalidating query caches 
+[2026-09-10T13:16:56.808Z] [INFO] [QueryClient] Invalidated all trainee status caches { enrollmentId: undefined }
+
+stdout | src/hooks/__tests__/useUpdateTraineeStatus.test.ts
+[API Config] API_BASE_URL: http://localhost:3003/api
+[API Config] VITE_API_BASE_URL: http://localhost:3003/api
+
+ Γ¥» src/hooks/__tests__/useUpdateTraineeStatus.test.ts (18 tests | 2 failed) 2546ms
+       ├ù should invalidate traineeStatus cache on successful update 1022ms
+       ├ù should invalidate traineeStatuses cache on successful update 1004ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 4 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/components/trainee/TraineeStatusTable.test.tsx > TraineeStatusTable > Filtering > should render filter options for employment status
+TestingLibraryElementError: Unable to find an element with the text: Filters. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="ds-card bg-card text-card-foreground flex flex-col gap-6 rounded-xl border"
+      data-slot="card"
+    >
+      <div
+        class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 pt-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6"
+        data-slot="card-header"
+      >
+        <h4
+          class="leading-none"
+          data-slot="card-title"
+        >
+          Trainee Status Records
+        </h4>
+        <p
+          class="text-muted-foreground"
+          data-slot="card-description"
+        >
+          View and manage trainee post-graduation status information
+        </p>
+      </div>
+      <div
+        class="px-6 [&:last-child]:pb-6 space-y-6"
+        data-slot="card-content"
+      >
+        <fieldset
+          aria-labelledby="filter-legend"
+          class="space-y-4 p-4 bg-muted/30 rounded-lg border"
+          role="region"
+        >
+          <legend
+            class="text-sm font-semibold"
+            id="filter-legend"
+          >
+            Filter and Search
+          </legend>
+          <div
+            class="flex items-center justify-between"
+          >
+            <span
+              class="text-sm font-semibold"
+            >
+              Active Filters
+            </span>
+          </div>
+          <fieldset
+            class="space-y-2"
+          >
+            <legend
+              class="text-xs font-medium"
+            >
+              Employment Status
+            </legend>
+            <div
+              class="grid grid-cols-2 md:grid-cols-3 gap-2"
+            >
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Employed"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Employed
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Unemployed"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Unemployed
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Self-Employed"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Self-Employed
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Pursuing Education"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Pursuing Education
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Deceased"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Deceased
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Pending"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Pending
+                </span>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset
+            class="space-y-2"
+          >
+            <legend
+              class="text-xs font-medium"
+            >
+              Skills Match
+            </legend>
+            <div
+              class="grid grid-cols-2 md:grid-cols-3 gap-2"
+            >
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+ ...
+ Γ¥» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ Γ¥» getByText node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ Γ¥» src/components/trainee/TraineeStatusTable.test.tsx:294:21
+    292|       );
+    293|
+    294|       expect(screen.getByText('Filters')).toBeInTheDocument();
+       |                     ^
+    295|       const employmentLabels = screen.getAllByText('Employment Status'ΓÇª
+    296|       expect(employmentLabels.length).toBeGreaterThan(0);
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/4]ΓÄ»
+
+ FAIL  src/components/trainee/TraineeStatusTable.test.tsx > TraineeStatusTable > Pagination > should display limit selector with current limit
+TestingLibraryElementError: Unable to find an element with the text: Limit:. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <div
+      class="ds-card bg-card text-card-foreground flex flex-col gap-6 rounded-xl border"
+      data-slot="card"
+    >
+      <div
+        class="@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-1.5 px-6 pt-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6"
+        data-slot="card-header"
+      >
+        <h4
+          class="leading-none"
+          data-slot="card-title"
+        >
+          Trainee Status Records
+        </h4>
+        <p
+          class="text-muted-foreground"
+          data-slot="card-description"
+        >
+          View and manage trainee post-graduation status information
+        </p>
+      </div>
+      <div
+        class="px-6 [&:last-child]:pb-6 space-y-6"
+        data-slot="card-content"
+      >
+        <fieldset
+          aria-labelledby="filter-legend"
+          class="space-y-4 p-4 bg-muted/30 rounded-lg border"
+          role="region"
+        >
+          <legend
+            class="text-sm font-semibold"
+            id="filter-legend"
+          >
+            Filter and Search
+          </legend>
+          <div
+            class="flex items-center justify-between"
+          >
+            <span
+              class="text-sm font-semibold"
+            >
+              Active Filters
+            </span>
+          </div>
+          <fieldset
+            class="space-y-2"
+          >
+            <legend
+              class="text-xs font-medium"
+            >
+              Employment Status
+            </legend>
+            <div
+              class="grid grid-cols-2 md:grid-cols-3 gap-2"
+            >
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Employed"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Employed
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Unemployed"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Unemployed
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Self-Employed"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Self-Employed
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Pursuing Education"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Pursuing Education
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Deceased"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Deceased
+                </span>
+              </label>
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+              >
+                <input
+                  aria-label="Filter by employment status: Pending"
+                  class="w-4 h-4"
+                  type="checkbox"
+                />
+                <span
+                  class="text-xs"
+                >
+                  Pending
+                </span>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset
+            class="space-y-2"
+          >
+            <legend
+              class="text-xs font-medium"
+            >
+              Skills Match
+            </legend>
+            <div
+              class="grid grid-cols-2 md:grid-cols-3 gap-2"
+            >
+              <label
+                class="flex items-center gap-2 px-2 py-1 rounded border cursor-pointer hover:bg-muted/50"
+ ...
+ Γ¥» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ Γ¥» getByText node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ Γ¥» src/components/trainee/TraineeStatusTable.test.tsx:419:21
+    417|       );
+    418|
+    419|       expect(screen.getByText('Limit:')).toBeInTheDocument();
+       |                     ^
+    420|       // Check that the component is rendered, but we don't verify theΓÇª
+    421|       // since the Select component may render differently than expectΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/4]ΓÄ»
+
+ FAIL  src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatus cache on successful update
+AssertionError: expected "invalidateQueries" to be called with arguments: [ { queryKey: [ 'traineeStatus' ] } ]
+
+Received:
+
+  1st invalidateQueries call:
+
+  [
+    {
+      "queryKey": [
+        "traineeStatus",
+      ],
++     "refetchType": "stale",
+    },
+  ]
+
+  2nd invalidateQueries call:
+
+  [
+    {
+      "queryKey": [
+-       "traineeStatus",
++       "traineeStatuses",
+      ],
++     "refetchType": "stale",
+    },
+  ]
+
+
+Number of calls: 2
+
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div />
+  </body>
+</html>
+ Γ¥» src/hooks/__tests__/useUpdateTraineeStatus.test.ts:334:32
+    332|
+    333|       await waitFor(() => {
+    334|         expect(queryClientSpy).toHaveBeenCalledWith({
+       |                                ^
+    335|           queryKey: ['traineeStatus'],
+    336|         });
+ Γ¥» runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ Γ¥» checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ Γ¥» Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/4]ΓÄ»
+
+ FAIL  src/hooks/__tests__/useUpdateTraineeStatus.test.ts > useUpdateTraineeStatus > Cache Invalidation > should invalidate traineeStatuses cache on successful update
+AssertionError: expected "invalidateQueries" to be called with arguments: [ { queryKey: [ 'traineeStatuses' ] } ]
+
+Received:
+
+  1st invalidateQueries call:
+
+  [
+    {
+      "queryKey": [
+-       "traineeStatuses",
++       "traineeStatus",
+      ],
++     "refetchType": "stale",
+    },
+  ]
+
+  2nd invalidateQueries call:
+
+  [
+    {
+      "queryKey": [
+        "traineeStatuses",
+      ],
++     "refetchType": "stale",
+    },
+  ]
+
+
+Number of calls: 2
+
+
+Ignored nodes: comments, script, style
+<html>
+  <head />
+  <body>
+    <div />
+  </body>
+</html>
+ Γ¥» src/hooks/__tests__/useUpdateTraineeStatus.test.ts:354:32
+    352|
+    353|       await waitFor(() => {
+    354|         expect(queryClientSpy).toHaveBeenCalledWith({
+       |                                ^
+    355|           queryKey: ['traineeStatuses'],
+    356|         });
+ Γ¥» runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ Γ¥» checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ Γ¥» Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[4/4]ΓÄ»
+
+
+ Test Files  2 failed | 6 passed (8)
+      Tests  4 failed | 292 passed (296)
+   Start at  21:16:51
+   Duration  8.05s (transform 2.76s, setup 3.63s, import 5.87s, tests 12.72s, environment 19.73s)
+
+

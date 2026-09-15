@@ -1,0 +1,135 @@
+# BMDC Responsive Web Interface - Apache SPA Configuration
+# Optimized for React Router client-side routing
+
+# ========================================
+# DIAGNOSTIC: Verify .htaccess is working
+# ========================================
+
+# This line will set an environment variable that proves .htaccess is loaded
+# If you see this working, .htaccess is being read
+
+<IfModule mod_env.c>
+  SetEnv HTACCESS_LOADED "true"
+</IfModule>
+
+# ========================================
+# CORE REWRITE ENGINE - CRITICAL
+# ========================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  
+  # Set RewriteBase - IMPORTANT: Ensure this matches your site structure
+  RewriteBase /
+  
+  # ---- CRITICAL: Don't process certain directories ----
+  # Skip rewriting if request is to a real directory
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+  
+  # ---- CRITICAL: Don't rewrite real files ----
+  # Skip rewriting if request is to a real file
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
+  
+  # ---- CORE SPA RULE: Route everything else to index.html ----
+  # This sends all other requests to index.html so React Router can handle them
+  RewriteCond %{REQUEST_URI} !^/index\.html$
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# ========================================
+# COMPRESSION (Optional, improves performance)
+# ========================================
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ========================================
+# BROWSER CACHING (Improves performance)
+# ========================================
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 2 days"
+  
+  # HTML - always check
+  ExpiresByType text/html "access"
+  
+  # Assets (CSS, JS) - cache 30 days
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  
+  # Images & Fonts - cache 1 year
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/gif "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# ========================================
+# SECURITY HEADERS
+# ========================================
+
+<IfModule mod_headers.c>
+  # Prevent MIME type sniffing
+  Header set X-Content-Type-Options "nosniff"
+  
+  # Prevent clickjacking
+  Header set X-Frame-Options "SAMEORIGIN"
+  
+  # XSS Protection
+  Header set X-XSS-Protection "1; mode=block"
+  
+  # Cache control for HTML
+  <FilesMatch "\\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+  
+  # Cache control for versioned assets
+  <FilesMatch "\\.(js|css)$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
+</IfModule>
+
+# ========================================
+# DISABLE DIRECTORY LISTING
+# ========================================
+
+Options -Indexes
+
+# ========================================
+# TROUBLESHOOTING TIPS
+# ========================================
+
+# If you still see 404 errors:
+#
+# 1. Check if mod_rewrite is enabled:
+#    - Contact your hosting provider
+#    - Ask them to enable Apache mod_rewrite
+#
+# 2. Check if RewriteBase is correct:
+#    - If your site is in a subdirectory like bmdc.site/app/, change:
+#    - RewriteBase / to RewriteBase /app/
+#
+# 3. Test with a simple rewrite:
+#    - Create a test.txt file
+#    - Add rule: RewriteRule ^test-page\.html$ test.txt [L]
+#    - Visit: bmdc.site/test-page.html
+#    - If it shows test.txt content, mod_rewrite works
+#
+# 4. Enable RewriteLog for debugging:
+#    - RewriteLog /var/log/apache2/rewrite.log
+#    - RewriteLogLevel 9
+#    - (Ask your hosting provider to do this)

@@ -1,0 +1,5 @@
+{
+    "git.ignoreLimitWarning": true,
+    "terminal.integrated.windowsEnableConpty": false,
+    "chat.useNestedAgentsMdFiles": true
+}

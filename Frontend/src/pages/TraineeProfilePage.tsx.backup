@@ -1,0 +1,782 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import DashboardLayout from '../components/DashboardLayout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+import { Separator } from '../components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  GraduationCap,
+  Edit2,
+  Save,
+  X,
+  QrCode,
+  Award,
+  BookOpen,
+  Clock,
+  CheckCircle2
+} from 'lucide-react';
+import { getFileUrl } from '../services/api';
+import { toast } from 'sonner';
+import traineeService from '../services/traineeService';
+import certificateService, { Certificate } from '../services/certificateService';
+import CertificateViewer from '../components/CertificateViewer';
+import { CardGridSkeleton, ListSkeleton } from '../components/LoadingSkeletons';
+import { Skeleton } from '../components/ui/skeleton';
+import logger from '../utils/logger';
+import { TraineeStatusCard } from '../components/trainee/TraineeStatusCard';
+import TraineeStatusModal from '../components/TraineeStatusModal';
+import { useTraineeStatus } from '../hooks/useTraineeStatus';
+
+interface TraineeProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  middle_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  birth_date: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+  photo_path?: string;
+  program_id?: string;
+  status: string;
+  enrollment_date: string;
+  program?: {
+    id: string;
+    name: string;
+    description: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+    instructor?: string | null;
+    duration_weeks?: number;
+    max_trainees?: number;
+  };
+}
+
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  date_earned: string;
+  type: 'certificate' | 'badge' | 'completion';
+}
+
+export default function TraineeProfilePage() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [traineeProfile, setTraineeProfile] = useState<TraineeProfile | null>(null);
+  const [editForm, setEditForm] = useState<Partial<TraineeProfile>>({});
+  const [achievements] = useState<Achievement[]>([]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [loadingCertificates, setLoadingCertificates] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+
+  // Fetch trainee status record
+  const { record: statusRecord, isLoading: statusLoading, error: statusError, refetch: refetchStatus } = useTraineeStatus(
+    traineeProfile?.program_id ? `${traineeProfile.program_id}-${traineeProfile.id}` : undefined
+  );
+
+  useEffect(() => {
+    // Clear cache to ensure fresh data from server
+    traineeService.clearProfileCache?.();
+    loadProfileData();
+    loadCertificates();
+  }, [user]);
+
+  const loadProfileData = async () => {
+    try {
+      setLoading(true);
+      
+      // Get trainee profile from API - always fetch fresh to get latest updates from admins
+      const profile = await traineeService.getMyProfile();
+      
+      // Transform to match component interface
+      const address = `${profile.street}, ${profile.barangay}, ${profile.municipality}, ${profile.province}`;
+      
+      const profileData: TraineeProfile = {
+        id: profile.id,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        middle_name: profile.middle_name,
+        email: profile.email,
+        phone: profile.phone,
+        address: address,
+        birth_date: profile.birth_date,
+        emergency_contact_name: profile.emergency_contact_name ?? '',
+        emergency_contact_phone: profile.emergency_contact_phone ?? '',
+        photo_path: profile.photo_path || '',
+        program_id: profile.program_id,
+        status: profile.status,
+        enrollment_date: profile.enrollment_date,
+        program: (profile as any).program || undefined
+      };
+      
+      setTraineeProfile(profileData);
+      setEditForm(profileData);
+
+    } catch (error: any) {
+      logger.error('Failed to load profile data', { error });
+      toast.error(error?.message || 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCertificates = async () => {
+    try {
+      setLoadingCertificates(true);
+      const certs = await certificateService.getMyCertificates();
+      setCertificates(certs);
+    } catch (error: any) {
+      logger.error('Failed to load certificates', { error });
+      // Don't show error toast for certificates as it's not critical
+    } finally {
+      setLoadingCertificates(false);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (editing) {
+      // Cancel editing, reset form
+      setEditForm(traineeProfile || {});
+    }
+    setEditing(!editing);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      
+      // Extract address components if address was changed
+      let updateData: any = {};
+      
+      // Only send fields that trainees are allowed to update
+      if (editForm.phone !== traineeProfile?.phone) {
+        updateData.phone = editForm.phone;
+      }
+      
+      if (editForm.address !== traineeProfile?.address && editForm.address) {
+        // Parse address - simplified parsing
+        const parts = editForm.address.split(',').map(p => p.trim());
+        if (parts.length >= 4) {
+          updateData.street = parts[0];
+          updateData.barangay = parts[1];
+          updateData.municipality = parts[2];
+          updateData.province = parts[3];
+        }
+      }
+      
+      if (editForm.photo_path !== traineeProfile?.photo_path) {
+        updateData.photo_path = editForm.photo_path;
+      }
+
+      if (editForm.emergency_contact_name !== traineeProfile?.emergency_contact_name) {
+        updateData.emergency_contact_name = editForm.emergency_contact_name ?? null;
+      }
+
+      if (editForm.emergency_contact_phone !== traineeProfile?.emergency_contact_phone) {
+        updateData.emergency_contact_phone = editForm.emergency_contact_phone ?? null;
+      }
+      
+      if (Object.keys(updateData).length === 0) {
+        toast.info('No changes to save');
+        setEditing(false);
+        return;
+      }
+      
+      // Call API to update profile
+      await traineeService.updateMyProfile(updateData);
+      
+      // Reload profile data
+      await loadProfileData();
+      
+      setEditing(false);
+      toast.success('Profile updated successfully');
+      
+    } catch (error: any) {
+      logger.error('Failed to save profile', { error });
+      toast.error(error?.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const getAchievementIcon = (type: string) => {
+    switch (type) {
+      case 'certificate':
+        return <Award className="size-5 text-yellow-500" />;
+      case 'badge':
+        return <CheckCircle2 className="size-5 text-green-500" />;
+      case 'completion':
+        return <BookOpen className="size-5 text-blue-500" />;
+      default:
+        return <Award className="size-5 text-gray-500" />;
+    }
+  };
+
+  const getAchievementBadge = (type: string) => {
+    switch (type) {
+      case 'certificate':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'badge':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'completion':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Profile">
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <Skeleton className="size-20 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-7 w-64" />
+                  <Skeleton className="h-4 w-48" />
+                </div>
+              </div>
+            </CardHeader>
+          </Card>
+          <CardGridSkeleton count={3} />
+          <ListSkeleton rows={4} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <DashboardLayout title="Profile">
+      <main className="w-full">
+        <div className="space-y-8">
+          {/* ATTENTION: Profile Hero - Editorial Split Layout */}
+          <section className="pt-8 md:pt-16">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 xl:gap-20 items-end">
+              {/* Left: Profile Info */}
+              <div className="space-y-8 order-2 md:order-1">
+                <div className="space-y-4">
+                  <h1 className="text-5xl md:text-6xl font-bold tracking-tight text-gray-950 dark:text-white leading-[1.1]">
+                    {traineeProfile?.first_name} {traineeProfile?.last_name}
+                  </h1>
+                  <p className="text-xl md:text-2xl text-muted-foreground font-medium">
+                    {traineeProfile?.program?.name || 'Trainee'}
+                  </p>
+                  <div className="flex flex-wrap gap-3 pt-4">
+                    <Badge 
+                      variant={traineeProfile?.status === 'active' ? 'default' : 'secondary'}
+                      className="text-sm font-semibold px-4 py-2"
+                    >
+                      {traineeProfile?.status === 'active' ? 'Active' : traineeProfile?.status}
+                    </Badge>
+                    <Badge variant="outline" className="text-sm font-medium px-4 py-2">
+                      {traineeProfile?.enrollment_date ? `Joined ${formatDate(traineeProfile.enrollment_date).split(' ').slice(0, 2).join(' ')}` : 'Member'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Action Buttons - EXPLICIT CONTAINER */}
+                <div className="flex flex-wrap gap-4 pt-8 w-full items-center">
+                  {!editing && (
+                    <Button 
+                      onClick={handleEditToggle} 
+                      size="lg"
+                      style={{
+                        display: 'inline-flex',
+                        backgroundColor: 'rgb(var(--primary))',
+                      }}
+                      className="gap-3 bg-primary text-primary-foreground hover:bg-primary/90 flex-shrink-0 hover:shadow-lg transition-shadow"
+                    >
+                      <Edit2 className="h-5 w-5 shrink-0" />
+                      <span className="font-semibold">Edit My Profile</span>
+                    </Button>
+                  )}
+                  {editing && (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleEditToggle} 
+                        disabled={saving} 
+                        size="lg"
+                        className="gap-3 flex-shrink-0"
+                      >
+                        <X className="h-5 w-5 shrink-0" />
+                        <span>Cancel</span>
+                      </Button>
+                      <Button 
+                        onClick={handleSaveProfile} 
+                        disabled={saving} 
+                        size="lg"
+                        className="gap-3 bg-primary text-primary-foreground hover:bg-primary/90 flex-shrink-0"
+                      >
+                        {saving ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-transparent border-t-white shrink-0"></div>
+                        ) : (
+                          <Save className="h-5 w-5 shrink-0" />
+                        )}
+                        <span>Save</span>
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Avatar - Massive artistic element */}
+              <div className="order-1 md:order-2 flex justify-center md:justify-end">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/0 rounded-3xl blur-3xl group-hover:blur-2xl transition-all duration-700 -z-10"></div>
+                  <Avatar className="size-64 md:size-80 border-4 border-primary/30 ring-8 ring-primary/5 shadow-2xl">
+                    <AvatarImage src={traineeProfile?.photo_path ? getFileUrl(traineeProfile.photo_path) : ''} className="object-cover" />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-7xl font-bold">
+                      {traineeProfile?.first_name?.[0]}{traineeProfile?.last_name?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* INTEREST: Tabbed Content - Editorial Grid Layout */}
+          <section className="space-y-12 md:space-y-16">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16 auto-rows-max grid-auto-flow-dense">
+              {/* Main Content - Left, spans 2 columns */}
+              <div className="lg:col-span-2 space-y-8">
+                <Tabs defaultValue="personal" className="w-full">
+                  <TabsList className="grid grid-cols-4 w-full h-auto gap-1 bg-gray-100/50 dark:bg-gray-900/50 p-1.5 rounded-xl border border-gray-200/50 dark:border-gray-800/50">
+                    <TabsTrigger 
+                      value="personal" 
+                      className="text-xs sm:text-sm py-3 px-2 sm:px-3 font-semibold rounded-lg transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-gray-950 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:scale-105"
+                    >
+                      Personal
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="contact" 
+                      className="text-xs sm:text-sm py-3 px-2 sm:px-3 font-semibold rounded-lg transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-gray-950 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:scale-105"
+                    >
+                      Contact
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="certificates" 
+                      className="text-xs sm:text-sm py-3 px-2 sm:px-3 font-semibold rounded-lg transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-gray-950 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:scale-105"
+                    >
+                      Certs
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="achievements" 
+                      className="text-xs sm:text-sm py-3 px-2 sm:px-3 font-semibold rounded-lg transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-gray-950 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:scale-105"
+                    >
+                      Awards
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="personal" className="mt-8 space-y-6">
+                    <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50">
+                      <CardHeader className="pb-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                        <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-primary/10 dark:bg-primary/20">
+                            <User className="h-6 w-6 text-primary" />
+                          </div>
+                          Personal Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-8 space-y-7">
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <div className="space-y-3">
+                            <Label htmlFor="first_name" className="text-sm font-bold text-gray-700 dark:text-gray-300">First Name</Label>
+                            {editing ? (
+                              <Input
+                                id="first_name"
+                                value={editForm.first_name || ''}
+                                onChange={(e) => handleInputChange('first_name', e.target.value)}
+                                className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                                placeholder="Enter first name"
+                              />
+                            ) : (
+                              <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50">
+                                {traineeProfile?.first_name}
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <Label htmlFor="last_name" className="text-sm font-bold text-gray-700 dark:text-gray-300">Last Name</Label>
+                            {editing ? (
+                              <Input
+                                id="last_name"
+                                value={editForm.last_name || ''}
+                                onChange={(e) => handleInputChange('last_name', e.target.value)}
+                                className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                                placeholder="Enter last name"
+                              />
+                            ) : (
+                              <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50">
+                                {traineeProfile?.last_name}
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <Label htmlFor="middle_name" className="text-sm font-bold text-gray-700 dark:text-gray-300">Middle Name</Label>
+                            {editing ? (
+                              <Input
+                                id="middle_name"
+                                value={editForm.middle_name || ''}
+                                onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                                className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                                placeholder="Enter middle name"
+                              />
+                            ) : (
+                              <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50">
+                                {traineeProfile?.middle_name || '—'}
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-3">
+                            <Label htmlFor="birth_date" className="text-sm font-bold text-gray-700 dark:text-gray-300">Birth Date</Label>
+                            {editing ? (
+                              <Input
+                                id="birth_date"
+                                type="date"
+                                value={editForm.birth_date || ''}
+                                onChange={(e) => handleInputChange('birth_date', e.target.value)}
+                                className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                              />
+                            ) : (
+                              <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50 flex items-center gap-3">
+                                <Calendar className="h-5 w-5 text-primary/60 shrink-0" />
+                                <span>{traineeProfile?.birth_date ? formatDate(traineeProfile.birth_date) : '—'}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-3 pt-4">
+                          <Label htmlFor="address" className="text-sm font-bold text-gray-700 dark:text-gray-300">Address</Label>
+                          {editing ? (
+                            <Input
+                              id="address"
+                              value={editForm.address || ''}
+                              onChange={(e) => handleInputChange('address', e.target.value)}
+                              className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                              placeholder="Street, Barangay, Municipality, Province"
+                            />
+                          ) : (
+                            <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50">
+                              {traineeProfile?.address || '—'}
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="contact" className="mt-8 space-y-6">
+                    <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50">
+                      <CardHeader className="pb-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                        <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-900/40">
+                            <Phone className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                          </div>
+                          Contact Information
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-8 space-y-7">
+                        <div className="grid gap-6 sm:grid-cols-2">
+                          <div className="space-y-3">
+                            <Label htmlFor="email" className="text-sm font-bold text-gray-700 dark:text-gray-300">Email Address</Label>
+                            <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50 flex items-center gap-3 break-all">
+                              <Mail className="h-5 w-5 text-primary/60 shrink-0" />
+                              {traineeProfile?.email}
+                            </div>
+                            <p className="text-xs text-muted-foreground font-semibold mt-2">Cannot be changed</p>
+                          </div>
+                          <div className="space-y-3">
+                            <Label htmlFor="phone" className="text-sm font-bold text-gray-700 dark:text-gray-300">Phone Number</Label>
+                            {editing ? (
+                              <Input
+                                id="phone"
+                                value={editForm.phone || ''}
+                                onChange={(e) => handleInputChange('phone', e.target.value)}
+                                className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                                placeholder="Enter phone number"
+                              />
+                            ) : (
+                              <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50 flex items-center gap-3">
+                                <Phone className="h-5 w-5 text-primary/60 shrink-0" />
+                                {traineeProfile?.phone || '—'}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <Separator className="my-8 bg-gray-200/50 dark:bg-gray-800/50" />
+                        
+                        <div>
+                          <h4 className="font-bold text-lg text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                            <div className="w-1.5 h-8 rounded-full bg-red-500/60"></div>
+                            Emergency Contact
+                          </h4>
+                          <div className="grid gap-6 sm:grid-cols-2">
+                            <div className="space-y-3">
+                              <Label htmlFor="emergency_contact_name" className="text-sm font-bold text-gray-700 dark:text-gray-300">Contact Name</Label>
+                              {editing ? (
+                                <Input
+                                  id="emergency_contact_name"
+                                  value={editForm.emergency_contact_name || ''}
+                                  onChange={(e) => handleInputChange('emergency_contact_name', e.target.value)}
+                                  className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                                  placeholder="Enter contact name"
+                                />
+                              ) : (
+                                <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50">
+                                  {traineeProfile?.emergency_contact_name || '—'}
+                                </div>
+                              )}
+                            </div>
+                            <div className="space-y-3">
+                              <Label htmlFor="emergency_contact_phone" className="text-sm font-bold text-gray-700 dark:text-gray-300">Contact Phone</Label>
+                              {editing ? (
+                                <Input
+                                  id="emergency_contact_phone"
+                                  value={editForm.emergency_contact_phone || ''}
+                                  onChange={(e) => handleInputChange('emergency_contact_phone', e.target.value)}
+                                  className="text-base rounded-lg border-gray-300 dark:border-gray-700 focus:ring-primary/50 py-3"
+                                  placeholder="Enter contact phone"
+                                />
+                              ) : (
+                                <div className="py-3 px-4 bg-gray-100 dark:bg-gray-900/50 rounded-lg text-base font-medium border border-gray-200/50 dark:border-gray-800/50">
+                                  {traineeProfile?.emergency_contact_phone || '—'}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="certificates" className="mt-8 space-y-6">
+                    <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50">
+                      <CardHeader className="pb-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                        <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-yellow-100 dark:bg-yellow-900/40">
+                            <Award className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+                          </div>
+                          My Certificates
+                        </CardTitle>
+                        <CardDescription className="text-base mt-3">
+                          Certificates uploaded by your administrator
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-8">
+                        {loadingCertificates ? (
+                          <div className="flex flex-col items-center justify-center py-16">
+                            <div className="animate-spin rounded-full h-12 w-12 border-2 border-primary/20 border-t-primary"></div>
+                            <p className="text-sm text-muted-foreground mt-4">Loading certificates...</p>
+                          </div>
+                        ) : (
+                          <CertificateViewer certificates={certificates} />
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="achievements" className="mt-8 space-y-6">
+                    <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50">
+                      <CardHeader className="pb-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                        <CardTitle className="text-2xl font-bold flex items-center gap-3">
+                          <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-900/40">
+                            <Award className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                          </div>
+                          Achievements & Badges
+                        </CardTitle>
+                        <CardDescription className="text-base mt-3">
+                          Your earned badges and program completions
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-8">
+                        {achievements.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <div className="p-4 rounded-2xl bg-gray-100 dark:bg-gray-900/50 mb-4">
+                              <Award className="h-12 w-12 text-muted-foreground" />
+                            </div>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">No achievements yet</p>
+                            <p className="text-base text-muted-foreground mt-2">
+                              Complete modules and attend sessions to earn achievements
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {achievements.map((achievement) => (
+                              <div 
+                                key={achievement.id} 
+                                className="group flex items-start gap-5 p-5 border border-gray-200/50 dark:border-gray-800/50 rounded-xl bg-gray-50/50 dark:bg-gray-900/30 hover:bg-gray-100 dark:hover:bg-gray-900/50 transition-colors"
+                              >
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 dark:bg-primary/20 shrink-0 group-hover:scale-110 transition-transform">
+                                  {getAchievementIcon(achievement.type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <h4 className="font-bold text-base text-gray-900 dark:text-white">{achievement.title}</h4>
+                                    <Badge 
+                                      variant="outline"
+                                      className={`text-xs font-semibold whitespace-nowrap ${getAchievementBadge(achievement.type)}`}
+                                    >
+                                      {achievement.type}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-base text-muted-foreground mt-2">
+                                    {achievement.description}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground mt-4 flex items-center gap-2 font-semibold">
+                                    <Clock className="h-4 w-4" />
+                                    Earned on {formatDate(achievement.date_earned)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              {/* Sidebar - Right, spans 1 column, sticky on large screens */}
+              <div className="space-y-8 lg:sticky lg:top-20 h-fit">
+                {/* Post-Graduation Status Card */}
+                <TraineeStatusCard
+                  statusRecord={statusRecord}
+                  isLoading={statusLoading}
+                  error={statusError?.message}
+                  onViewDetails={() => setStatusModalOpen(true)}
+                />
+
+                {/* QR Code Card */}
+                <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50">
+                  <CardHeader className="pb-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                    <CardTitle className="text-xl font-bold flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/40">
+                        <QrCode className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      QR Code
+                    </CardTitle>
+                    <CardDescription className="text-sm mt-2">
+                      For attendance scanning
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6 flex flex-col items-center">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">QR code identification has been removed</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Program Card */}
+                {traineeProfile?.program && (
+                  <Card className="border-0 shadow-sm bg-gradient-to-br from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50">
+                    <CardHeader className="pb-6 border-b border-gray-200/50 dark:border-gray-800/50">
+                      <CardTitle className="text-xl font-bold flex items-center gap-3">
+                        <div className="p-2.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
+                          <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        Current Program
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-5">
+                      <div>
+                        <h4 className="font-bold text-lg text-gray-900 dark:text-white">{traineeProfile.program.name}</h4>
+                        <p className="text-base text-muted-foreground mt-3 leading-relaxed">
+                          {traineeProfile.program.description}
+                        </p>
+                      </div>
+                      <Separator className="my-6 bg-gray-200/50 dark:bg-gray-800/50" />
+                      <div className="space-y-4 text-sm">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground font-semibold">Start Date</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{formatDate(traineeProfile.program.start_date)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground font-semibold">End Date</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{formatDate(traineeProfile.program.end_date)}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground font-semibold">Status</span>
+                          <Badge 
+                            variant={traineeProfile.program.status === 'active' ? 'default' : 'secondary'} 
+                            className="text-xs font-bold"
+                          >
+                            {traineeProfile.program.status === 'active' ? 'Active' : traineeProfile.program.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground font-semibold">Joined</span>
+                          <span className="font-bold text-gray-900 dark:text-white">{formatDate(traineeProfile.enrollment_date)}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* ACTION: Footer Section */}
+          <section className="py-8 md:py-12 border-t border-gray-200/50 dark:border-gray-800/50">
+            <div className="text-center space-y-3">
+              <p className="text-base text-muted-foreground font-medium">
+                Questions or need to update your information?
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Contact your program coordinator or administrator
+              </p>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      {/* Trainee Status Modal */}
+      <TraineeStatusModal
+        open={statusModalOpen}
+        onOpenChange={setStatusModalOpen}
+        enrollmentId={traineeProfile?.program_id ? `${traineeProfile.program_id}-${traineeProfile.id}` : ''}
+        traineeId={traineeProfile?.id || ''}
+        traineeName={traineeProfile ? `${traineeProfile.first_name} ${traineeProfile.last_name}` : undefined}
+        programName={traineeProfile?.program?.name}
+        existingStatus={statusRecord || undefined}
+        onStatusCreated={() => {
+          // Refetch status record when status is created/updated
+          refetchStatus();
+          setStatusModalOpen(false);
+        }}
+      />
+    </DashboardLayout>
+  );
+
+}

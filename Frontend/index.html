@@ -1,0 +1,30 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BMDC Responsive Web Interface</title>
+    
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Performance Optimization: Resource Hints & Critical Path Optimization -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    
+    <!-- 1. DNS Prefetch - Resolve domain lookups early -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    
+    <!-- 2. Preconnect - Establish full connection (DNS + TCP + TLS) early -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- 3. Performance Hints -->
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+  

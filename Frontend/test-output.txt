@@ -1,0 +1,134 @@
+npm notice run bmdc-responsive-web-interface@0.1.0 test
+npm notice run vitest run useUpdateRequirementDefinition.test.ts --run
+
+ RUN  v4.1.5 C:/Users/Paolo Amor P. Palma/Downloads/bmdc1.1-main/Frontend
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Errors ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+Vitest caught 6 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: You do not have permission to update requirements. Admin access is required.
+ Γ¥» Object.mutationFn src/hooks/useUpdateRequirementDefinition.ts:182:17
+    180|             }
+    181|           );
+    182|           throw new Error(
+       |                 ^
+    183|             'You do not have permission to update requirements. Admin ΓÇª
+    184|           );
+ Γ¥» runNextTicks node:internal/process/task_queues:65:5
+ Γ¥» listOnTimeout node:internal/timers:567:9
+ Γ¥» processTimers node:internal/timers:541:7
+
+This error originated in "src/hooks/useUpdateRequirementDefinition.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "should handle 403 Forbidden (admin-only) error". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: Requirement definition not found
+ Γ¥» Object.mutationFn src/hooks/useUpdateRequirementDefinition.ts:197:15
+    195|         });
+    196|
+    197|         throw new Error(errorMessage);
+       |               ^
+    198|       }
+    199|     },
+ Γ¥» runNextTicks node:internal/process/task_queues:65:5
+ Γ¥» listOnTimeout node:internal/timers:567:9
+ Γ¥» processTimers node:internal/timers:541:7
+
+This error originated in "src/hooks/useUpdateRequirementDefinition.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "should handle 404 Not Found error". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: Network error
+ Γ¥» Object.mutationFn src/hooks/useUpdateRequirementDefinition.ts:197:15
+    195|         });
+    196|
+    197|         throw new Error(errorMessage);
+       |               ^
+    198|       }
+    199|     },
+ Γ¥» runNextTicks node:internal/process/task_queues:65:5
+ Γ¥» listOnTimeout node:internal/timers:567:9
+ Γ¥» processTimers node:internal/timers:541:7
+
+This error originated in "src/hooks/useUpdateRequirementDefinition.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "should handle generic API errors". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: API Error
+ Γ¥» Object.mutationFn src/hooks/useUpdateRequirementDefinition.ts:197:15
+    195|         });
+    196|
+    197|         throw new Error(errorMessage);
+       |               ^
+    198|       }
+    199|     },
+ Γ¥» runNextTicks node:internal/process/task_queues:65:5
+ Γ¥» listOnTimeout node:internal/timers:567:9
+ Γ¥» processTimers node:internal/timers:541:7
+
+This error originated in "src/hooks/useUpdateRequirementDefinition.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "should not retry failed mutations". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: Requirement ID is required for update
+ Γ¥» Object.mutationFn src/hooks/useUpdateRequirementDefinition.ts:133:15
+    131|       // Validate required inputs
+    132|       if (!id) {
+    133|         throw new Error('Requirement ID is required for update');
+       |               ^
+    134|       }
+    135|
+ Γ¥» Object.fn ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/mutation.js:68:25
+ Γ¥» run ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/retryer.js:83:46
+ Γ¥» Object.start ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/retryer.js:119:20
+ Γ¥» Mutation.execute ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/mutation.js:105:31
+ Γ¥» runNextTicks node:internal/process/task_queues:65:5
+ Γ¥» listOnTimeout node:internal/timers:567:9
+ Γ¥» processTimers node:internal/timers:541:7
+
+This error originated in "src/hooks/useUpdateRequirementDefinition.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "should throw error if requirement ID is empty". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ» Unhandled Rejection ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+Error: At least one field is required to update
+ Γ¥» Object.mutationFn src/hooks/useUpdateRequirementDefinition.ts:137:15
+    135|
+    136|       if (!data || Object.keys(data).length === 0) {
+    137|         throw new Error('At least one field is required to update');
+       |               ^
+    138|       }
+    139|
+ Γ¥» Object.fn ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/mutation.js:68:25
+ Γ¥» run ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/retryer.js:83:46
+ Γ¥» Object.start ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/retryer.js:119:20
+ Γ¥» Mutation.execute ../../../../Paolo%20Amor%20P.%20Palma/Downloads/bmdc1.1-main/Frontend/node_modules/@tanstack/query-core/build/modern/mutation.js:105:31
+ Γ¥» runNextTicks node:internal/process/task_queues:65:5
+ Γ¥» listOnTimeout node:internal/timers:567:9
+ Γ¥» processTimers node:internal/timers:541:7
+
+This error originated in "src/hooks/useUpdateRequirementDefinition.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "should throw error if no fields are provided for update". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+     Errors  6 errors
+   Start at  23:58:15
+   Duration  1.08s (transform 76ms, setup 135ms, import 168ms, tests 84ms, environment 572ms)
+

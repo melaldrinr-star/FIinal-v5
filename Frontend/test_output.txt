@@ -1,0 +1,32 @@
+npm notice run bmdc-responsive-web-interface@0.1.0 test
+npm notice run vitest run TraineeStatusTable.test.tsx --run
+
+ RUN  v4.1.5 C:/Users/Paolo Amor P. Palma/Downloads/bmdc1.1-main/Frontend
+
+ Γ¥» src/components/trainee/TraineeStatusTable.test.tsx (33 tests | 1 failed) 923ms
+       ├ù should display loading skeleton when isLoading is true 4ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/components/trainee/TraineeStatusTable.test.tsx > TraineeStatusTable > Loading and Error States > should display loading skeleton when isLoading is true
+Error: expect(received).toBeInTheDocument()
+
+received value must be an HTMLElement or an SVGElement.
+Received has type:  Null
+Received has value: null
+ Γ¥» src/components/trainee/TraineeStatusTable.test.tsx:192:30
+    190|       // Check for loading indicator or skeleton text
+    191|       const loadingElement = screen.queryByText(/Trainee Status RecordΓÇª
+    192|       expect(loadingElement).toBeInTheDocument();
+       |                              ^
+    193|     });
+    194|
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 32 passed (33)
+   Start at  16:12:43
+   Duration  2.16s (transform 123ms, setup 127ms, import 372ms, tests 923ms, environment 615ms)
+
