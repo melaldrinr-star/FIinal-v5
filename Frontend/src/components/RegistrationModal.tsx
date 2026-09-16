@@ -86,8 +86,7 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
   const [requirementDefinitions, setRequirementDefinitions] = useState<RequirementDefinition[]>([]);
   const [loadingRequirements, setLoadingRequirements] = useState(false);
   const [requirementsError, setRequirementsError] = useState<string | null>(null);
-  const [acknowledgedRequirements, setAcknowledgedRequirements] = useState(false);
-  // Step 6: Requirements file uploads
+    // Step 6: Requirements file uploads
   const [requirementFiles, setRequirementFiles] = useState<Record<string, File | null>>({
     accomplished_learners_profile_form: null,
     birth_certificate_copy: null,
@@ -163,8 +162,6 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
       setIsVerified(false);
       setResendCountdown(0);
       setCanResend(true);
-      // Reset requirements acknowledgement
-      setAcknowledgedRequirements(false);
     }
   }, [open]);
 
@@ -444,9 +441,23 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
     }
 
     if (s === 6) {
-      // Requirements acknowledgment - must be checked before proceeding
-      if (!acknowledgedRequirements) {
-        errs.email = "Please acknowledge the requirements to proceed"; // Use a dummy field for error display
+      // FIXED: Check that all 6 required files are uploaded
+      // Do NOT check acknowledgedRequirements checkbox (this was the bug)
+      const REQUIRED_FILES = [
+        'accomplished_learners_profile_form',
+        'birth_certificate_copy',
+        'id_pictures',
+        'valid_id_copy',
+        'report_card_tor_copy',
+        'barangay_no_grade_certification',
+      ];
+
+      const allRequiredFilesPresent = REQUIRED_FILES.every(
+        (fileKey) => requirementFiles[fileKey as keyof typeof requirementFiles] !== null
+      );
+
+      if (!allRequiredFilesPresent) {
+        errs.email = "Please upload all 6 required documents to proceed";
       }
     }
 
@@ -805,6 +816,62 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
               </div>
             </>
           )}
+
+          {/* STEP 5 – Tenant Selection */}
+          {step === 5 && (
+            <>
+              <p className="text-sm text-muted-foreground">Select your organization:</p>
+              {loadingTenants ? (
+                <div className="space-y-3 py-2">
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                  <Skeleton className="h-28 w-full rounded-lg" />
+                </div>
+              ) : tenants.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
+                  <Building2 className="mx-auto mb-2 size-8 opacity-40" />
+                  <p>No organizations available.</p>
+                </div>
+              ) : tenantError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/30">
+                  <div className="flex items-center gap-2 text-red-800 dark:text-red-300">
+                    <AlertCircle className="size-4 flex-shrink-0" />
+                    <span className="text-sm">{tenantError}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {tenants.map(tenant => (
+                    <button
+                      key={tenant.id}
+                      type="button"
+                      onClick={() => set('tenant_id', tenant.id)}
+                      className={`w-full rounded-lg border p-4 text-left transition-all ${
+                        form.tenant_id === tenant.id
+                          ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1">
+                          <p className="font-semibold">{tenant.name}</p>
+                          {tenant.description && (
+                            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{tenant.description}</p>
+                          )}
+                        </div>
+                        <div className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                          form.tenant_id === tenant.id ? 'border-primary bg-primary' : 'border-muted-foreground/30'
+                        }`}>
+                          {form.tenant_id === tenant.id && <div className="size-2 rounded-full bg-white" />}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {errors.tenant_id && <p className="text-xs text-destructive">{errors.tenant_id}</p>}
+            </>
+          )}
+
                     {/* STEP 6 – Requirements */}
           {step === 6 && (
             <>
