@@ -173,7 +173,7 @@ interface FilePathColumn {
 
 const FILE_PATH_COLUMNS: FilePathColumn[] = [
   { table: 'programs',  columns: ['image_path', 'thumbnail_path'] },
-  { table: 'trainees',  columns: ['photo_path', 'thumbnail_path', 'qr_code_path'] },
+  { table: 'trainees',  columns: ['photo_path', 'thumbnail_path'] },
   { table: 'items',     columns: ['image_path', 'thumbnail_path', 'qr_code_path'] },
   { table: 'certificates', columns: ['file_path', 'qr_code_path'] },
 ];

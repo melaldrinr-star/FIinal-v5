@@ -7,7 +7,6 @@ import { itemService } from '@/services/itemService';
 import { lendingService } from '@/services/lendingService';
 import { traineeService } from '@/services/traineeService';
 import { programService } from '@/services/programService';
-import { anomalyService } from '@/services/anomalyService';
 
 // OPTIONS /api/reports/:type/pdf - Handle CORS preflight
 
@@ -75,12 +74,6 @@ const trainees = await traineeService.getAllTrainees(context, {});
   `Active: ${programs.filter((program) => program.status === 'active').length}`,
   '',
   ...programs.slice(0, 120).map((program) => `${program.name} | ${program.status} | ${program.start_date} to ${program.end_date}`),
-  ]; } else if (type === 'anomalies') { const anomalies = await anomalyService.getAllAnomalies();
-  lines = [
-  `Total anomalies: ${anomalies.length}`,
-  `Open: ${anomalies.filter((anomaly) => anomaly.status === 'open').length}`,
-  '',
-  ...anomalies.slice(0, 120).map((anomaly) => `${anomaly.anomaly_type} | ${anomaly.severity} | ${anomaly.status} | ${anomaly.description}`),
   ]; } else if (type === 'dashboard') { // Pass full context to service (Task 3.3: Services need isSuperAdmin flag)
 
 const [items, lendings, trainees, programs] = await Promise.all([
@@ -103,3 +96,4 @@ const [items, lendings, trainees, programs] = await Promise.all([
 const pdfBytes = buildSimplePdf(title, lines);
   return createPdfDownloadResponse(pdfBytes, `${type}-report.pdf`); }
 );
+

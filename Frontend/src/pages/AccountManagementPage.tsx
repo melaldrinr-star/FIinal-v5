@@ -30,6 +30,7 @@ import userService, { User as ApiUser } from '../services/userService';
 import registrationService, { PendingRegistration } from '../services/registrationService';
 import { useAuth } from '../contexts/AuthContext';
 import { ListSkeleton, TableSkeleton } from '../components/LoadingSkeletons';
+import TraineePreviewModal from '../components/TraineePreviewModal';
 
 interface User extends ApiUser {}
 
@@ -75,6 +76,8 @@ export default function AccountManagementPage() {
   const [selectedReg, setSelectedReg] = useState<PendingRegistration | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [reviewAction, setReviewAction] = useState<'approve' | 'reject'>('approve');
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [selectedRegPreview, setSelectedRegPreview] = useState<PendingRegistration | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [accountsPage, setAccountsPage] = useState(1);
   const [registrationsPage, setRegistrationsPage] = useState(1);
@@ -169,6 +172,11 @@ export default function AccountManagementPage() {
     } finally {
       setReviewing(false);
     }
+  };
+
+  const openPreviewModal = (reg: PendingRegistration) => {
+    setSelectedRegPreview(reg);
+    setPreviewModalOpen(true);
   };
 
   // ── Account CRUD ─────────────────────────────────────────────────
@@ -495,6 +503,110 @@ export default function AccountManagementPage() {
               </CardContent>
             </Card>
 
+            {/* Registration Table (Desktop) */}
+            {!loadingRegs && (
+              <Card className="hidden sm:block overflow-x-auto">
+                <CardContent className="p-0">
+                  <Table className="text-xs sm:text-sm">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Name</TableHead>
+                        <TableHead className="text-xs">Email</TableHead>
+                        <TableHead className="text-xs">Program</TableHead>
+                        <TableHead className="text-xs">Status</TableHead>
+                        <TableHead className="text-xs w-[50px]">View</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedRegistrations.map(reg => (
+                        <TableRow 
+                          key={reg.id}
+                          onClick={() => openPreviewModal(reg)}
+                          className="cursor-pointer hover:bg-muted/50"
+                        >
+                          <TableCell className="py-2 sm:py-4">
+                            <p className="font-medium text-xs sm:text-sm truncate">
+                              {reg.first_name} {reg.last_name}
+                            </p>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-xs sm:text-sm truncate">
+                            {reg.email}
+                          </TableCell>
+                          <TableCell className="text-xs sm:text-sm truncate">
+                            {reg.program?.name || '—'}
+                          </TableCell>
+                          <TableCell>
+                            {statusBadge(reg.status)}
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPreviewModal(reg);
+                              }}
+                            >
+                              <Eye className="size-3" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Registration Cards (Mobile) */}
+            {!loadingRegs && (
+              <div className="sm:hidden space-y-2">
+                {paginatedRegistrations.map(reg => (
+                  <Card 
+                    key={reg.id} 
+                    className="p-0 cursor-pointer hover:bg-muted/50"
+                    onClick={() => openPreviewModal(reg)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="space-y-2">
+                        <div>
+                          <h4 className="truncate text-sm font-medium">
+                            {reg.first_name} {reg.last_name}
+                          </h4>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {reg.email}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-muted-foreground mb-1">Program</p>
+                            <p className="text-xs font-medium truncate">
+                              {reg.program?.name || '—'}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            {statusBadge(reg.status)}
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openPreviewModal(reg);
+                              }}
+                            >
+                              <Eye className="size-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
             {loadingRegs && (
               <div className="space-y-3">
                 <TableSkeleton rows={4} />
@@ -735,7 +847,28 @@ export default function AccountManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Trainee Preview Modal ── */}
+      <TraineePreviewModal
+        open={previewModalOpen}
+        onOpenChange={setPreviewModalOpen}
+        trainee={selectedRegPreview}
+        onApprove={() => { fetchRegistrations(); fetchUsers(); }}
+        onReject={() => { fetchRegistrations(); fetchUsers(); }}
+        isAdminMode={canReview}
+      />
     </DashboardLayout>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
 

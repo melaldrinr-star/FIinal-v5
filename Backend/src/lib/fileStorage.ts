@@ -287,7 +287,6 @@ export async function initTenantDirectories(tenantId: string): Promise<void> {
     getImageDir(tenantId, 'attendance'),   // attendance selfies (no thumbnails needed)
 
     // qrcodes
-    getQRCodeDir(tenantId, 'trainees'),
     getQRCodeDir(tenantId, 'items'),
     getQRCodeDir(tenantId, 'certificates'),
   ];

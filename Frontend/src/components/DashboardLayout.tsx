@@ -79,7 +79,6 @@ const NAVIGATION_ARRAYS = {
       icon: Settings, 
       children: [
         { name: 'Activity Logs', href: '/activity-logs', icon: Activity, permission: 'canViewActivityLogs' as const },
-        { name: 'Data Quality', href: '/anomalies', icon: AlertTriangle, permission: 'canViewAnomalies' as const },
         { name: 'Non-Attendance Dates', href: '/non-attendance-dates', icon: Calendar, permission: 'canManagePrograms' as const },
         { name: 'Landing Content', href: '/admin/landing-content', icon: FileText, permission: 'canManageCMS' as const },
         { name: 'Requirements Management', href: '/admin/requirements', icon: BookOpen, permission: 'canManagePrograms' as const },

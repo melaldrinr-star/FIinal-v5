@@ -7,7 +7,6 @@ import { itemService } from '@/services/itemService';
 import { lendingService } from '@/services/lendingService';
 import { traineeService } from '@/services/traineeService';
 import { programService } from '@/services/programService';
-import { anomalyService } from '@/services/anomalyService';
 
 // OPTIONS /api/reports/:type/csv - Handle CORS preflight
 
@@ -112,15 +111,7 @@ if (type === 'programs') { const rows = (await programService.getAllPrograms()).
   duration_weeks: program.duration_weeks, }));
   return createCsvDownloadResponse(objectsToCsv(rows), 'programs-report.csv'); }
 
-if (type === 'anomalies') { const rows = (await anomalyService.getAllAnomalies()).map((anomaly) => ({ id: anomaly.id,
-  category: anomaly.category,
-  anomaly_type: anomaly.anomaly_type,
-  severity: anomaly.severity,
-  status: anomaly.status,
-  description: anomaly.description,
-  detected_at: anomaly.detected_at,
-  resolved_at: anomaly.resolved_at || '', }));
-  return createCsvDownloadResponse(objectsToCsv(rows), 'anomalies-report.csv'); }
+
 
 if (type === 'dashboard') { // Pass full context to service (Task 3.3: Services need isSuperAdmin flag)
 
@@ -145,3 +136,5 @@ const [items, lendings, trainees, programs] = await Promise.all([
 
   return createCsvDownloadResponse(objectsToCsv([{ error: `Unsupported report type: ${rawType}` }]), 'unsupported-report.csv'); }
 );
+
+

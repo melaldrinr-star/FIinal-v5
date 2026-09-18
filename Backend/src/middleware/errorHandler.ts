@@ -57,7 +57,6 @@ if (error && typeof error === 'object' && 'code' in error && 'message' in error)
       /^Registration not found$/,
       /^Registration is already .+$/,
       /^Cannot approve registration: .+$/,
-      /^Trainee not found with this QR code$/,
       /^Session not found$/,
       /^Trainee is not enrolled in this program$/,
       /^No active attendance schedule found/,

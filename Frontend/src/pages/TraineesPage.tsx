@@ -535,6 +535,14 @@ export default function TraineesPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e: React.MouseEvent) => {
                               e.stopPropagation();
+                              openTraineeDetails(trainee, 'info');
+                            }}>
+                              <Eye className="mr-2 size-4" />
+                              Preview
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
                               navigate(`/trainees/${trainee.id}/edit`);
                             }}>
                               <Edit className="mr-2 size-4" />
@@ -616,6 +624,14 @@ export default function TraineesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e: React.MouseEvent) => {
+                              e.stopPropagation();
+                              openTraineeDetails(trainee, 'info');
+                            }}>
+                              <Eye className="mr-2 size-4" />
+                              Preview
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={(e: React.MouseEvent) => {
                             e.stopPropagation();
                             navigate(`/trainees/${trainee.id}/edit`);

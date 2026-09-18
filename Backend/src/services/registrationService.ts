@@ -308,6 +308,27 @@ const trainee = incompleteEnrollmentCheck.trainee;
       throw error;
     }
 
+    // Store username from registration for later approval
+    const { error: usernameError } = await supabaseAdmin
+      .from('pending_registration_usernames')
+      .insert({
+        trainee_id: trainee.id,
+        username: data.username,
+      });
+
+    if (usernameError) {
+      console.error('[Registration] Failed to store registration username', {
+        trainee_id: trainee.id,
+        error: usernameError,
+      });
+      throw usernameError;
+    }
+
+    console.log('[Registration] Username stored for pending registration', {
+      trainee_id: trainee.id,
+      username: data.username,
+    });
+
     // Store the hashed password temporarily in pending_registration_passwords table
     // This will be retrieved during approval and moved to users.password_hash
     const hashedPassword = await hashPassword(data.password);
@@ -611,13 +632,28 @@ if (!data) return null;
         throw new Error('Registration password is missing. Please contact support.');
       }
 
+      // Retrieve username that was stored during registration
+      const { data: pendingUsername } = await supabaseAdmin
+        .from('pending_registration_usernames')
+        .select('username')
+        .eq('trainee_id', id)
+        .single();
+
+      const username = pendingUsername?.username || traineeReg.email.split('@')[0];
+
+      console.log('[Approval] Creating user account with username', {
+        trainee_id: id,
+        username: username,
+        usernameSource: pendingUsername ? 'registration' : 'fallback',
+      });
+
       // Create user account with the trainee's submitted password
       // Password is stored in users table (not trainees table)
       const { data: newUser, error: userError } = await supabaseAdmin
         .from('users')
         .insert({
           email: traineeReg.email,
-          username: traineeReg.email.split('@')[0], // Fallback username from email
+          username: username, // Use stored username, not email fallback
           role: 'trainee',
           password_hash: pendingPassword.password_hash, // Use the stored trainee password
         })
@@ -658,6 +694,22 @@ if (!data) return null;
         .from('pending_registration_passwords')
         .delete()
         .eq('trainee_id', id);
+
+      // Clean up: Remove username from pending table after successful approval
+      if (pendingUsername) {
+        const { error: deleteError } = await supabaseAdmin
+          .from('pending_registration_usernames')
+          .delete()
+          .eq('trainee_id', id);
+
+        if (deleteError) {
+          console.warn('[Approval] Failed to clean up pending username', {
+            trainee_id: id,
+            error: deleteError,
+          });
+          // Don't fail approval if cleanup fails
+        }
+      }
     }
 
     // Complete the registration

@@ -51,7 +51,6 @@ const ProgramDetailPage = lazyPage(() => import('./pages/ProgramDetailPage'));
 const ProgramFormPage = lazyPage(() => import('./pages/ProgramFormPage'));
 const AccountManagementPage = lazyPage(() => import('./pages/AccountManagementPage'));
 const ActivityLogsPage = lazyPage(() => import('./pages/ActivityLogsPage'));
-const AnomalyDashboardPage = lazyPage(() => import('./pages/AnomalyDashboardPage'));
 const TraineeDashboardPage = lazyPage(() => import('./pages/TraineeDashboardPage'));
 const TraineeProfilePage = lazyPage(() => import('./pages/TraineeProfilePage'));
 const TraineeProgramsPage = lazyPage(() => import('./pages/TraineeProgramsPage'));
@@ -199,7 +198,6 @@ export default function App() {
                   <Route path="/admin/requirements/:id/edit" element={<ProtectedRoute allowedRoles={['local_admin', 'super_admin']}><RequirementDetailPage /></ProtectedRoute>} />
                   <Route path="/admin/requirements/analytics" element={<ProtectedRoute allowedRoles={['local_admin', 'super_admin']}><RequirementsAnalyticsPage /></ProtectedRoute>} />
                   <Route path="/account-management"    element={<ProtectedRoute><AccountManagementPage /></ProtectedRoute>} />
-                  <Route path="/anomalies"             element={<ProtectedRoute><AnomalyDashboardPage /></ProtectedRoute>} />
                   <Route path="/non-attendance-dates"  element={<ProtectedRoute><NonAttendanceDatesPage /></ProtectedRoute>} />
                   <Route path="/registrations"        element={<ProtectedRoute><RegistrationsPage /></ProtectedRoute>} />
 
@@ -231,3 +229,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+

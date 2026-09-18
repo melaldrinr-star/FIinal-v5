@@ -281,14 +281,16 @@ export class VerificationService {
           code,
           expires_at: expiresAt,
           method,
+          type: 'email',
           attempt_count: 0,
         })
         .select()
         .single();
 
       if (insertError) {
-        logger.error('Failed to create verification record', { error: insertError });
-        throw new Error('Failed to create verification record');
+        logger.error('Failed to create verification record', { error: insertError, code: insertError?.code, message: insertError?.message, details: insertError?.details });
+        console.error('❌ Verification insert error details:', JSON.stringify(insertError, null, 2));
+        throw new Error(`Failed to create verification record: ${insertError?.message || "Unknown error"}`);
       }
 
       const results = {
@@ -472,6 +474,11 @@ export class VerificationService {
 }
 
 export const verificationService = new VerificationService();
+
+
+
+
+
 
 
 

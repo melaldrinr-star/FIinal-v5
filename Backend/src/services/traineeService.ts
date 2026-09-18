@@ -392,10 +392,6 @@ const { data, error } = await supabaseAdmin
     return this.withThumbnail(data);
   }
 
-  async getTraineeByQRCode(qrCode: string, tenantId: string, includeDeleted: boolean = false): Promise<Trainee | null> {
-    // QR code support has been removed. Use getTraineeById or getTraineeByEmail instead.
-    return null;
-  }
 
   async getTraineesByProgram(programId: string, tenantId: string): Promise<Trainee[]> {
     return this.getAllTrainees(null, { program_id: programId, tenant_id: tenantId });

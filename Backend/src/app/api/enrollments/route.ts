@@ -71,7 +71,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     .from('enrollments')
     .select(`
       *,
-      trainee:trainees(id, first_name, last_name, middle_name, email, qr_code, photo_path),
+      trainee:trainees(id, first_name, last_name, middle_name, email, photo_path),
       program:programs(id, name, description, start_date, end_date, status)
     `);
 

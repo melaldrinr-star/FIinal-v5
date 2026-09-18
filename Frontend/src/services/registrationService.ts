@@ -73,13 +73,30 @@ class RegistrationService {
    * Submit a new trainee self-registration (public)
    * Can be used for both new trainee signups and existing trainees applying to new programs
    */
-  async submitRegistration(data: SubmitRegistrationData, isExistingTrainee: boolean = false): Promise<PendingRegistration> {
+  /*async submitRegistration(data: SubmitRegistrationData, isExistingTrainee: boolean = false): Promise<PendingRegistration> {
     const response = await api.post<PendingRegistration>('/registrations', {
       ...data,
       isExistingTrainee, // Pass flag to indicate if this is an existing trainee
     });
     return response.data;
   }
+*/
+  async submitRegistration(data: SubmitRegistrationData, isExistingTrainee: boolean = false): Promise<PendingRegistration> {
+  console.log('[RegistrationService] submitRegistration called with data:', data);
+  try {
+    console.log('[RegistrationService] Making POST request to /registrations');
+    const response = await api.post<PendingRegistration>('/registrations', {
+      ...data,
+      isExistingTrainee,
+    });
+    console.log('[RegistrationService] POST /registrations succeeded:', response);
+    return response.data;
+  } catch (error) {
+    console.error('[RegistrationService] POST /registrations FAILED:', error);
+    throw error;
+  }
+}
+
 
   /**
    * Get all registrations (admin/staff only)
@@ -106,6 +123,8 @@ class RegistrationService {
   async rejectRegistration(id: string, rejection_reason?: string): Promise<void> {
     await api.patch(`/registrations/${id}`, { action: 'reject', rejection_reason });
   }
+
+  
 }
 
 export default new RegistrationService();

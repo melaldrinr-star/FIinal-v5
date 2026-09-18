@@ -19,6 +19,7 @@ interface LoginModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSwitchToSignup?: () => void;
+  preFilledUsername?: string;  // NEW - optional pre-filled username from registration
 }
 
 interface CMSSettings {
@@ -37,7 +38,7 @@ function getDashboardRoute(role: UserRole | string): string {
   }
 }
 
-export default function LoginModal({ open, onOpenChange, onSwitchToSignup }: LoginModalProps) {
+export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFilledUsername }: LoginModalProps) {
   const navigate = useNavigate();
   const { login, selectTenant, isAuthenticated, user } = useAuth();
   const [cmsSettings, setCmsSettings] = useState<CMSSettings | null>(null);
@@ -106,6 +107,16 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup }: Log
     };
     loadSettings();
   }, []);
+
+  // Pre-fill username when modal opens with a pre-filled username from registration
+  useEffect(() => {
+    if (open && preFilledUsername) {
+      setEmail(preFilledUsername);
+      console.log('[LoginModal] Pre-filled username from registration', {
+        username: preFilledUsername,
+      });
+    }
+  }, [open, preFilledUsername]);
 
   // When already authenticated, close and go to the right dashboard
   useEffect(() => {
@@ -777,6 +788,13 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup }: Log
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
               <div className="flex-1 overflow-y-auto px-6">
                 <div className="space-y-4 pb-6">
+                  {preFilledUsername && (
+                    <div className="rounded-lg border border-green-200 bg-green-50 p-3 mb-4">
+                      <p className="text-sm text-green-800">
+                        ✓ Registration successful! Please log in with your credentials.
+                      </p>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input

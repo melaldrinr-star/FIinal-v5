@@ -67,7 +67,7 @@ export interface CleanupReport {
 
 const FILE_PATH_COLUMNS: Array<{ table: string; columns: string[] }> = [
   { table: 'programs',      columns: ['image_path', 'thumbnail_path'] },
-  { table: 'trainees',      columns: ['photo_path', 'thumbnail_path', 'qr_code_path'] },
+  { table: 'trainees',      columns: ['photo_path', 'thumbnail_path'] },
   { table: 'items',         columns: ['image_path', 'thumbnail_path', 'qr_code_path'] },
   { table: 'certificates',  columns: ['file_path', 'qr_code_path'] },
 ];

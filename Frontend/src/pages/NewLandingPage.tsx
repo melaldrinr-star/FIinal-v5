@@ -173,6 +173,7 @@ export default function LandingPage() {
   const location = useLocation();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
+  const [registeredUsername, setRegisteredUsername] = useState('');
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [heroImgLoaded, setHeroImgLoaded] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
@@ -283,6 +284,28 @@ export default function LandingPage() {
       return true;
     });
   }, [contextPrograms, searchQuery, selectedFilter]);
+
+  /**
+   * Handle registration completion callback
+   * Called after successful email verification from RegistrationModal
+   */
+  const handleRegistrationComplete = (username: string) => {
+    logger.info('[LandingPage] Registration completed, transitioning to login', {
+      username,
+    });
+
+    // Store username for login modal pre-fill
+    setRegisteredUsername(username);
+
+    // Close registration modal
+    setIsRegistrationModalOpen(false);
+
+    // Small delay to ensure modal closes smoothly before opening login
+    setTimeout(() => {
+      // Open login modal
+      setIsLoginModalOpen(true);
+    }, 300);
+  };
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 24 },
@@ -977,8 +1000,13 @@ export default function LandingPage() {
         open={isLoginModalOpen}
         onOpenChange={setIsLoginModalOpen}
         onSwitchToSignup={() => setIsRegistrationModalOpen(true)}
+        preFilledUsername={registeredUsername}
       />
-      <RegistrationModal open={isRegistrationModalOpen} onOpenChange={setIsRegistrationModalOpen} />
+      <RegistrationModal 
+        open={isRegistrationModalOpen} 
+        onOpenChange={setIsRegistrationModalOpen}
+        onRegistrationComplete={handleRegistrationComplete}
+      />
       <ProgramDetailsModal
         program={selectedProgram}
         open={!!selectedProgram}

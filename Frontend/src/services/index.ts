@@ -61,9 +61,6 @@ export type {
   ProgramFilters,
 } from './programService';
 
-// Anomaly Service
-export { default as anomalyService } from './anomalyService';
-
 // Activity Log Service
 export { default as activityLogService } from './activityLogService';
 export type {

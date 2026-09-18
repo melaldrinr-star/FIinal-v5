@@ -83,7 +83,7 @@ export const GET = withErrorHandler(async (_request: NextRequest) => {
       {
         category: 'Profile Photo',
         examples: 'Photograph uploaded during registration',
-        purpose: 'Trainee identification and QR code generation',
+        purpose: 'Trainee identification',
       },
       {
         category: 'Emergency Contact',

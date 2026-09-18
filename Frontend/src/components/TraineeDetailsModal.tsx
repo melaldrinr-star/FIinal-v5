@@ -4,11 +4,13 @@ import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { User, Mail, Phone, GraduationCap, Calendar, MapPin, Download, Award, Upload, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, GraduationCap, Calendar, MapPin, Download, Award, Upload, Trash2, FileCheck, Eye } from 'lucide-react';
 import CertificateViewer from './CertificateViewer';
 import CertificateUploadModal from './CertificateUploadModal';
+import FilePreviewModal, { FilePreviewData } from './FilePreviewModal';
 import DeleteConfirmationDialog from './DeleteConfirmationDialog';
 import certificateService, { Certificate } from '../services/certificateService';
+import api from '../services/api';
 import traineeService from '../services/traineeService';
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,7 +44,7 @@ interface TraineeDetailsModalProps {
   initialTab?: TraineeDetailsTab;
 }
 
-export type TraineeDetailsTab = 'info' | 'trainings' | 'certificates';
+export type TraineeDetailsTab = 'info' | 'trainings' | 'requirements' | 'certificates';
 
 export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdit, initialTab = 'info' }: TraineeDetailsModalProps) {
   const { hasPermission } = useAuth();
@@ -52,12 +54,51 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [deleteConfirmDialogOpen, setDeleteConfirmDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [requirements, setRequirements] = useState<Record<string, any>>({});
+  const [loadingRequirements, setLoadingRequirements] = useState(false);
+  const [filePreviewOpen, setFilePreviewOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FilePreviewData | null>(null);
 
   useEffect(() => {
     if (!open) return;
     setActiveTab(initialTab);
     loadCertificates();
-  }, [open, initialTab]);
+    loadRequirements();
+  }, [open, initialTab, trainee?.id]);
+
+  const loadRequirements = async () => {
+    if (!trainee) {
+      console.log('No trainee, skipping loadRequirements');
+      return;
+    }
+    try {
+      setLoadingRequirements(true);
+      console.log('Fetching requirements for trainee:', trainee.id);
+      const response = await api.get(`/trainees/${String(trainee.id)}/requirements`);
+      console.log('API Response:', response);
+      console.log('Response data:', response.data);
+      console.log('Files array:', response.data?.files);
+      
+      const files = response?.data?.files || response?.files;
+      if (files && Array.isArray(files)) {
+        console.log('Files is array, processing...');
+        const reqMap: Record<string, any> = {};
+        files.forEach((file: any) => {
+          console.log('Processing file:', file.requirement_type);
+          reqMap[file.requirement_type] = file;
+        });
+        console.log('Final map:', reqMap);
+        console.log('Map keys:', Object.keys(reqMap));
+        setRequirements(reqMap);
+      } else {
+        console.warn('No files array in response:', { responseData: response.data, responseDirect: response });
+      }
+    } catch (error: any) {
+      console.error('Failed to load requirements:', error);
+    } finally {
+      setLoadingRequirements(false);
+    }
+  };
 
   const loadCertificates = async () => {
     if (!trainee) return;
@@ -72,28 +113,27 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
     }
   };
 
-  /**
-   * Executes trainee deletion from the details modal
-   * 
-   * Calls the API to soft-delete the trainee, then closes both the confirmation
-   * dialog and the details modal. Displays a success notification and logs the
-   * deletion event.
-   * 
-   * Sets `isDeleting` to true during the operation to show loading states.
-   * On error, calls `handleModalDeleteError` to display appropriate error messages
-   * while keeping the confirmation dialog open for retry.
-   * 
-   * @async
-   * 
-   * @throws Will not throw - errors are caught and handled by `handleModalDeleteError`
-   * 
-   * @example
-   * ```tsx
-   * // Called from DeleteConfirmationDialog onConfirm callback
-   * await handleDeleteTrainee();
-   * // Modal closes after successful deletion
-   * ```
-   */
+
+  const handleOpenFilePreview = (file: any) => {
+    setSelectedFile({
+      file_path: file.file_path,
+      file_name: file.file_name,
+      requirement_type: file.requirement_type,
+      uploaded_at: file.uploaded_at,
+    });
+    setFilePreviewOpen(true);
+  };
+
+  const handleDownloadFile = async (filePath: string, fileName: string, requirementType?: string) => {
+    if (!trainee || !requirementType) return;
+    try {
+      const downloadUrl = `/trainees/${String(trainee.id)}/requirements/${requirementType}/download`;
+      await api.downloadFile(downloadUrl, fileName);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download file');
+    }
+  };
   const handleDeleteTrainee = async () => {
     if (!trainee) return;
 
@@ -101,14 +141,11 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
       setIsDeleting(true);
       await traineeService.deleteTrainee(String(trainee.id));
 
-      // Close both dialog and modal
       setDeleteConfirmDialogOpen(false);
       onOpenChange(false);
 
-      // Show success notification
       toast.success(`Trainee ${trainee.name} has been deleted successfully.`);
 
-      // Log the deletion
       traineeLogger.deleted(trainee.name, String(trainee.id));
     } catch (error: any) {
       handleModalDeleteError(error);
@@ -117,28 +154,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
     }
   };
 
-  /**
-   * Handles errors that occur during trainee deletion from the modal
-   * 
-   * Displays an error toast with a message appropriate to the HTTP status code.
-   * Keeps the confirmation dialog open to allow the user to retry the deletion.
-   * 
-   * Error messages:
-   * - 403 Forbidden: "You don't have permission to delete this trainee."
-   * - 404 Not Found: "Trainee not found or already deleted."
-   * - Other errors: "Failed to delete trainee. Please try again later."
-   * 
-   * @param error - The error object from the API call, should contain `response?.status`
-   * 
-   * @example
-   * ```tsx
-   * try {
-   *   await traineeService.deleteTrainee(id);
-   * } catch (error) {
-   *   handleModalDeleteError(error); // Shows error toast, dialog stays open
-   * }
-   * ```
-   */
   const handleModalDeleteError = (error: any) => {
     const status = error?.response?.status;
     let message = 'Failed to delete trainee. Please try again later.';
@@ -152,7 +167,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
     }
 
     toast.error(message);
-    // Dialog stays open for retry
   };
 
   const handleDeleteCertificate = async (certificateId: string) => {
@@ -178,12 +192,10 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
     }
   };
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
-          {/* Header: avatar + name + badges */}
           <div className="flex items-center gap-3">
             <Avatar className="size-12 shrink-0 border-2 border-primary">
               {trainee.photoUrl && <AvatarImage src={trainee.photoUrl} alt={trainee.name} className="object-cover" />}
@@ -204,7 +216,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
           </div>
         </DialogHeader>
 
-        {/* Photo */}
         {trainee.photoUrl && (
           <div className="flex justify-center">
             <img
@@ -230,6 +241,15 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="requirements" className="flex items-center gap-1.5 px-3 py-2 text-sm">
+              <FileCheck className="size-4" />
+              <span>Requirements</span>
+              {Object.keys(requirements).length > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                  {Object.keys(requirements).length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="certificates" className="flex items-center gap-1.5 px-3 py-2 text-sm">
               <Award className="size-4" />
               <span>Certificates</span>
@@ -241,7 +261,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
             </TabsTrigger>
           </TabsList>
 
-          {/* Info Tab */}
           <TabsContent value="info" className="mt-3 space-y-2">
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 text-sm">
               <Mail className="size-4 shrink-0 text-primary" />
@@ -285,7 +304,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
             )}
           </TabsContent>
 
-          {/* Trainings Tab */}
           <TabsContent value="trainings" className="mt-3">
             {trainee.trainings.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-6">No training programs enrolled.</p>
@@ -313,7 +331,57 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
             )}
           </TabsContent>
 
-          {/* Certificates Tab */}
+          <TabsContent value="requirements" className="mt-3 space-y-2">
+            {loadingRequirements ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : Object.keys(requirements).length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileCheck className="size-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No requirements submitted yet</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(requirements).map(([key, req]: [string, any]) => (
+                  <div key={key} className="p-3 border rounded-lg bg-muted/40 flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground font-medium capitalize">
+                        {key.replace(/_/g, ' ')}
+                      </p>
+                      <p className="text-sm font-medium truncate">{req.file_name || req.fileName}</p>
+                      {req.uploaded_at && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Uploaded: {new Date(req.uploaded_at).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {req.file_path && (
+                        <>
+                          <button
+                            onClick={() => handleOpenFilePreview(req)}
+                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            title="Preview"
+                          >
+                            <Eye className="size-4 text-primary" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadFile(req.file_path, req.file_name, req.requirement_type)}
+                            className="p-1.5 rounded hover:bg-primary/10 transition-colors"
+                            title="Download"
+                          >
+                            <Download className="size-4 text-primary" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="certificates" className="mt-3">
             {hasPermission('canManageTrainees') && (
               <div className="mb-3">
@@ -341,7 +409,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
           </TabsContent>
         </Tabs>
 
-        {/* Footer actions */}
         <div className="flex gap-2 pt-2 border-t mt-1">
           {hasPermission('canManageTrainees') && (
             <Button
@@ -365,7 +432,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
         </div>
       </DialogContent>
 
-      {/* Delete Confirmation Dialog */}
       {trainee && (
         <DeleteConfirmationDialog
           open={deleteConfirmDialogOpen}
@@ -376,7 +442,6 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
         />
       )}
 
-      {/* Certificate Upload Modal */}
       {trainee && (
         <CertificateUploadModal
           open={uploadModalOpen}
@@ -389,6 +454,33 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
           }}
         />
       )}
-    </Dialog>
+
+      <FilePreviewModal
+        file={selectedFile}
+        open={filePreviewOpen}
+        onOpenChange={setFilePreviewOpen}
+        traineeId={String(trainee?.id)}
+      />    </Dialog>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -47,11 +47,6 @@ const DEFAULT_PERMISSIONS: Permission = {
   canManagePrograms: false,
   canManageCMS: false,
   canManageAccounts: false,
-  canViewAnomalies: false,
-  canResolveAnomalies: false,
-  canConfigureDetection: false,
-  canExportAnomalies: false,
-  canTriggerDetection: false,
   canViewActivityLogs: false,
   canExportActivityLogs: false,
 };

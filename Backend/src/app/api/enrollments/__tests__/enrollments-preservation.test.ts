@@ -137,7 +137,6 @@ function createMockGetEnrollment(overrides: Partial<MockEnrollment> = {}): MockE
       last_name: 'Doe',
       middle_name: 'M',
       email: 'john.doe@example.com',
-      qr_code: 'QR123456',
       photo_path: '/photos/john.jpg',
     },
     program: {
@@ -677,3 +676,4 @@ describe('Preservation Tests: Non-PATCH Operations (Task 2)', () => {
     });
   });
 });
+

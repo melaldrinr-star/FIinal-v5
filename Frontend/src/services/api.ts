@@ -9,7 +9,7 @@ import { logger } from '../utils/logger';
 // API Base URL - Change this to your backend URL
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (
   typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? 'http://localhost:3004/api'  // In development (localhost), explicitly target backend port 3004
+    ? 'http://localhost:3003/api'  // In development (localhost), explicitly target backend port 3004
     : `${window.location.protocol}//${window.location.host}/api`  // In production, use same origin
 );
 
@@ -334,21 +334,41 @@ class ApiService {
     params?: any
   ): Promise<void> {
     try {
+      logger.debug('[API] Starting file download', { url, filename });
+      
       const response = await apiClient.get(url, {
         params,
         responseType: 'blob',
       });
 
-      const blob = new Blob([response.data]);
+      logger.debug('[API] Download response received', { 
+        blobSize: response.data instanceof Blob ? response.data.size : 'unknown',
+        contentType: response.headers['content-type']
+      });
+
+      // response.data is already a Blob, don't wrap it again
+      const blob = response.data instanceof Blob ? response.data : new Blob([response.data]);
+      
+      logger.debug('[API] Creating blob URL', { 
+        blobType: blob.type,
+        blobSize: blob.size
+      });
+
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = filename;
       document.body.appendChild(link);
+      
+      logger.debug('[API] Triggering download click', { filename, href: link.href.substring(0, 50) });
+      
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
+      
+      logger.debug('[API] Download complete', { filename });
     } catch (error) {
+      logger.error('[API] Download failed', { error, url, filename });
       throw this.handleError(error as AxiosError);
     }
   }
@@ -512,3 +532,5 @@ export function getThumbnailUrl(path: string | null | undefined): string {
 }
 
 export default api;
+
+

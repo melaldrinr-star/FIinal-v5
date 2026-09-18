@@ -36,6 +36,7 @@ interface Program {
 interface RegistrationModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onRegistrationComplete?: (username: string) => void;
 }
 
 const STEPS = [
@@ -67,7 +68,11 @@ const maskEmail = (email: string): string => {
   return `${local.slice(0, 3)}...@${domain}`;
 };
 
-export default function RegistrationModal({ open, onOpenChange }: RegistrationModalProps) {
+export default function RegistrationModal({ 
+  open, 
+  onOpenChange,
+  onRegistrationComplete
+}: RegistrationModalProps) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -285,6 +290,7 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
       setIsVerified(true);
       setCodeVerified(true);
       toast.success('Email verified successfully!');
+
     } catch (error: any) {
       const errorMsg = error?.message || 'Invalid verification code';
       
@@ -323,6 +329,7 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
       setIsVerified(true);
       setCodeVerified(true);
       toast.success('Email verified successfully!');
+
     } catch (error: any) {
       const errorMsg = error?.message || 'Invalid verification code';
       
@@ -541,6 +548,13 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
         disability: data.disability?.trim() || null,
       });
       setSubmitted(true);
+      
+      // Call the parent callback to transition to login modal
+      if (onRegistrationComplete) {
+        setTimeout(() => {
+          onRegistrationComplete(form.username);
+        }, 500);
+      }
     } catch (error: any) {
       toast.error(error?.message || 'Registration failed. Please try again.');
     } finally {
@@ -1167,6 +1181,8 @@ export default function RegistrationModal({ open, onOpenChange }: RegistrationMo
     </Dialog>
   );
 }
+
+
 
 
 
