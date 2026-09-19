@@ -193,43 +193,43 @@ export const RequirementDropZone: React.FC<RequirementDropZoneProps> = ({
         accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif"
       />
 
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 space-y-2">
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-sm">{title}</p>
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-2 sm:gap-3">
+        <div className="flex-1 space-y-1.5 sm:space-y-2 w-full">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <p className="font-semibold text-xs sm:text-sm">{title}</p>
             {isRequired ? (
-              <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+              <span className="inline-flex items-center rounded-full bg-red-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
                 Required
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+              <span className="inline-flex items-center rounded-full bg-blue-100 px-1.5 sm:px-2 py-0.5 text-[10px] sm:text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                 Optional
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{description}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground">{description}</p>
 
           {file ? (
-            <div className="flex items-center gap-2 pt-2">
-              <CheckCircle className="size-4 text-green-600" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-400">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1.5 sm:pt-2">
+              <CheckCircle className="size-3.5 sm:size-4 text-green-600 shrink-0" />
+              <span className="text-[10px] sm:text-xs font-medium text-green-700 dark:text-green-400 break-all">
                 {getFileName()}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                 (
                 {getFileSizeFormatted()}
                 )
               </span>
               {isFileMetadata(file) && file.uploaded_at && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-[10px] sm:text-xs text-muted-foreground whitespace-nowrap">
                   • {new Date(file.uploaded_at).toLocaleDateString()}
                 </span>
               )}
             </div>
           ) : (
-            <div className="flex items-center gap-2 pt-2 text-muted-foreground">
-              <Upload className="size-4" />
-              <span className="text-xs">
+            <div className="flex items-center gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 text-muted-foreground">
+              <Upload className="size-3.5 sm:size-4 shrink-0" />
+              <span className="text-[10px] sm:text-xs">
                 {isDragging ? 'Drop file here' : 'Drag file here or click to browse'}
               </span>
             </div>
@@ -237,7 +237,7 @@ export const RequirementDropZone: React.FC<RequirementDropZoneProps> = ({
         </div>
 
         {file && (
-          <div className="flex gap-1">
+          <div className="flex gap-1 self-start sm:self-auto">
             {isFileMetadata(file) && traineeId && (
               <Button
                 type="button"
@@ -245,9 +245,9 @@ export const RequirementDropZone: React.FC<RequirementDropZoneProps> = ({
                 size="sm"
                 onClick={handleDownload}
                 title="Download file"
-                className="text-primary hover:text-primary hover:bg-primary/10"
+                className="text-primary hover:text-primary hover:bg-primary/10 h-7 sm:h-8 w-7 sm:w-8 p-0"
               >
-                <Download className="size-4" />
+                <Download className="size-3.5 sm:size-4" />
               </Button>
             )}
             <Button
@@ -255,9 +255,9 @@ export const RequirementDropZone: React.FC<RequirementDropZoneProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleRemove}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 sm:h-8 w-7 sm:w-8 p-0"
             >
-              <X className="size-4" />
+              <X className="size-3.5 sm:size-4" />
             </Button>
           </div>
         )}

@@ -405,49 +405,49 @@ export default function EnrollmentManagementSection({
 
           return (
             <Card key={enrollment.id} className="overflow-hidden">
-              <CardContent className="pt-6">
+              <CardContent className="pt-4 sm:pt-6 px-3 sm:px-6">
                 {/* Header row with program name and status badge */}
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-base leading-tight">
+                <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
+                  <div className="flex-1 w-full sm:w-auto">
+                    <h3 className="font-semibold text-sm sm:text-base leading-tight">
                       {enrollment.program?.name || 'Unknown Program'}
                     </h3>
                   </div>
                   <Badge
-                    className={`${statusStyles.bg} ${statusStyles.text} border-0 whitespace-nowrap`}
+                    className={`${statusStyles.bg} ${statusStyles.text} border-0 whitespace-nowrap text-xs`}
                   >
                     {statusStyles.label}
                   </Badge>
                 </div>
 
                 {/* Metadata grid - dates and grade */}
-                <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground font-medium">Enrollment Date</p>
-                    <p className="font-semibold">{formatDate(enrollment.enrollment_date)}</p>
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 text-xs sm:text-sm">
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <p className="text-muted-foreground font-medium text-[10px] sm:text-xs">Enrollment Date</p>
+                    <p className="font-semibold text-xs sm:text-sm">{formatDate(enrollment.enrollment_date)}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground font-medium">Completion Date</p>
-                    <p className="font-semibold">{formatDate(enrollment.completion_date)}</p>
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <p className="text-muted-foreground font-medium text-[10px] sm:text-xs">Completion Date</p>
+                    <p className="font-semibold text-xs sm:text-sm">{formatDate(enrollment.completion_date)}</p>
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-muted-foreground font-medium">Final Grade</p>
-                    <p className="font-semibold">{formatGrade(enrollment.final_grade)}</p>
+                  <div className="space-y-0.5 sm:space-y-1">
+                    <p className="text-muted-foreground font-medium text-[10px] sm:text-xs">Final Grade</p>
+                    <p className="font-semibold text-xs sm:text-sm">{formatGrade(enrollment.final_grade)}</p>
                   </div>
                 </div>
 
                 {/* Action buttons - only shown for non-terminal statuses */}
                 {(availableActions.complete || availableActions.fail || availableActions.drop) && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {availableActions.complete && (
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleActionClick(enrollment, 'complete')}
                         disabled={confirming || updating}
-                        className="text-green-700 border-green-200 hover:bg-green-50"
+                        className="text-green-700 border-green-200 hover:bg-green-50 w-full sm:w-auto text-xs"
                       >
-                        <CheckCircle2 className="h-4 w-4 mr-1.5" />
+                        <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
                         Mark as Complete
                       </Button>
                     )}
@@ -457,9 +457,9 @@ export default function EnrollmentManagementSection({
                         variant="outline"
                         onClick={() => handleActionClick(enrollment, 'fail')}
                         disabled={confirming || updating}
-                        className="text-red-700 border-red-200 hover:bg-red-50"
+                        className="text-red-700 border-red-200 hover:bg-red-50 w-full sm:w-auto text-xs"
                       >
-                        <XCircle className="h-4 w-4 mr-1.5" />
+                        <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5" />
                         Mark as Failed
                       </Button>
                     )}
@@ -469,6 +469,7 @@ export default function EnrollmentManagementSection({
                         variant="destructive"
                         onClick={() => handleActionClick(enrollment, 'drop')}
                         disabled={confirming || updating}
+                        className="w-full sm:w-auto text-xs"
                       >
                         Drop Program
                       </Button>

@@ -194,19 +194,26 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-2">
-          <div className="flex items-center gap-3">
-            <Avatar className="size-12 shrink-0 border-2 border-primary">
+      <DialogContent 
+        hideCloseButton={true}
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        style={{ 
+          width: 'calc(100% - 2rem)',
+          maxWidth: '42rem'
+        }}
+      >
+        <DialogHeader className="pb-2 px-4 sm:px-6 pt-4 sm:pt-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Avatar className="size-10 sm:size-12 shrink-0 border-2 border-primary">
               {trainee.photoUrl && <AvatarImage src={trainee.photoUrl} alt={trainee.name} className="object-cover" />}
-              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm sm:text-base">
                 {trainee.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <DialogTitle className="text-lg leading-tight truncate">{trainee.name}</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg leading-tight truncate">{trainee.name}</DialogTitle>
               <DialogDescription className="sr-only">Trainee details for {trainee.name}</DialogDescription>
-              <div className="flex flex-wrap gap-1.5 mt-1">
+              <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-1">
                 <Badge className={`text-xs ${getStatusColor(trainee.status)}`}>{trainee.status || 'N/A'}</Badge>
                 <Badge variant="outline" className="text-xs border-primary/40 text-primary">
                   #{String(trainee.id).slice(0, 8)}
@@ -217,71 +224,71 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
         </DialogHeader>
 
         {trainee.photoUrl && (
-          <div className="flex justify-center">
+          <div className="flex justify-center px-4 sm:px-6">
             <img
               src={trainee.photoUrl}
               alt={trainee.name}
-              className="h-48 w-auto rounded-md object-cover shadow"
+              className="h-32 sm:h-48 w-auto rounded-md object-cover shadow"
             />
           </div>
         )}
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TraineeDetailsTab)} className="w-full" orientation="horizontal">
-          <TabsList className="w-full flex items-center justify-start gap-1 h-auto p-1">
-            <TabsTrigger value="info" className="flex items-center gap-1.5 px-3 py-2 text-sm">
-              <User className="size-4" />
-              <span>Info</span>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TraineeDetailsTab)} className="w-full px-4 sm:px-6" orientation="horizontal">
+          <TabsList className="w-full flex items-center justify-start gap-0.5 sm:gap-1 h-auto p-0.5 sm:p-1">
+            <TabsTrigger value="info" className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+              <User className="size-3.5 sm:size-4" />
+              <span className="hidden xs:inline">Info</span>
             </TabsTrigger>
-            <TabsTrigger value="trainings" className="flex items-center gap-1.5 px-3 py-2 text-sm">
-              <GraduationCap className="size-4" />
-              <span>Trainings</span>
+            <TabsTrigger value="trainings" className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+              <GraduationCap className="size-3.5 sm:size-4" />
+              <span className="hidden xs:inline">Trainings</span>
               {trainee.trainings.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {trainee.trainings.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="requirements" className="flex items-center gap-1.5 px-3 py-2 text-sm">
-              <FileCheck className="size-4" />
-              <span>Requirements</span>
+            <TabsTrigger value="requirements" className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+              <FileCheck className="size-3.5 sm:size-4" />
+              <span className="hidden xs:inline">Requirements</span>
               {Object.keys(requirements).length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {Object.keys(requirements).length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="certificates" className="flex items-center gap-1.5 px-3 py-2 text-sm">
-              <Award className="size-4" />
-              <span>Certificates</span>
+            <TabsTrigger value="certificates" className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm">
+              <Award className="size-3.5 sm:size-4" />
+              <span className="hidden xs:inline">Certificates</span>
               {certificates.length > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                   {certificates.length}
                 </Badge>
               )}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="info" className="mt-3 space-y-2">
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 text-sm">
-              <Mail className="size-4 shrink-0 text-primary" />
+          <TabsContent value="info" className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
+            <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/40 text-xs sm:text-sm">
+              <Mail className="size-3.5 sm:size-4 shrink-0 text-primary" />
               <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">Email</p>
-                <p className="font-medium truncate">{trainee.email}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Email</p>
+                <p className="font-medium truncate text-xs sm:text-sm">{trainee.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 text-sm">
-              <Phone className="size-4 shrink-0 text-primary" />
+            <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/40 text-xs sm:text-sm">
+              <Phone className="size-3.5 sm:size-4 shrink-0 text-primary" />
               <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">Contact</p>
-                <p className="font-medium">{trainee.contact}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Contact</p>
+                <p className="font-medium text-xs sm:text-sm">{trainee.contact}</p>
               </div>
             </div>
             {trainee.address && (
-              <div className="flex items-start gap-2 p-2.5 rounded-lg bg-muted/40 text-sm">
-                <MapPin className="size-4 shrink-0 text-primary mt-0.5" />
+              <div className="flex items-start gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/40 text-xs sm:text-sm">
+                <MapPin className="size-3.5 sm:size-4 shrink-0 text-primary mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Address</p>
-                  <p className="font-medium">{trainee.address}</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Address</p>
+                  <p className="font-medium text-xs sm:text-sm">{trainee.address}</p>
                 </div>
               </div>
             )}
@@ -409,26 +416,23 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
           </TabsContent>
         </Tabs>
 
-        <div className="flex gap-2 pt-2 border-t mt-1">
+        <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t mt-1 px-4 sm:px-6 pb-4 sm:pb-6">
           {hasPermission('canManageTrainees') && (
             <Button
-              size="sm"
+              size="default"
               variant="destructive"
               onClick={() => setDeleteConfirmDialogOpen(true)}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm !px-6 sm:!px-8"
             >
-              <Trash2 className="mr-2 size-4" />
+              <Trash2 className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
               Delete Trainee
             </Button>
           )}
           {onEdit && (
-            <Button size="sm" className="flex-1" onClick={() => { onEdit(trainee.id); onOpenChange(false); }}>
+            <Button size="default" className="flex-1 text-xs sm:text-sm !px-6 sm:!px-8" onClick={() => { onEdit(trainee.id); onOpenChange(false); }}>
               Edit Trainee
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
         </div>
       </DialogContent>
 

@@ -1020,17 +1020,17 @@ export default function TraineeFormPage() {
 
         {/* Single Step Content Card */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               {(() => {
                 const StepIcon = steps[currentStep - 1].icon;
-                return <StepIcon className="size-5" />;
+                return <StepIcon className="size-4 sm:size-5" />;
               })()}
               {steps[currentStep - 1].name}
             </CardTitle>
-            <CardDescription>{steps[currentStep - 1].description}</CardDescription>
+            <CardDescription className="text-xs sm:text-sm">{steps[currentStep - 1].description}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <CardContent className="space-y-3 sm:space-y-4 md:space-y-6 p-4 sm:p-6">
 
             {/* Step 1: Personal Info */}
             {currentStep === 1 && (
@@ -1425,7 +1425,7 @@ export default function TraineeFormPage() {
                   </Alert>
                 )}
 
-                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
                   {/* Accomplished Learner's Profile Form */}
                   <div className="md:col-span-1">
                     <RequirementDropZone
@@ -1627,16 +1627,16 @@ export default function TraineeFormPage() {
 
             {/* Step 6: Trainings */}
             {currentStep === 6 && (
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Enrollment Management Section — replaces old program selector */}
                 {id ? (
                   <>
                     {/* For existing trainees: show enrollments and certificates */}
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                       {/* Enrollment Management Section */}
                       <div>
-                        <h4 className="font-semibold mb-3 flex items-center gap-2">
-                          <BookOpen className="size-5" />
+                        <h4 className="font-semibold mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                          <BookOpen className="size-4 sm:size-5" />
                           Enrollment Management
                         </h4>
                         <EnrollmentManagementSection
@@ -1649,13 +1649,13 @@ export default function TraineeFormPage() {
 
                       {/* Certificate Section — preserved below enrollments */}
                       <Separator />
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                      <div className="space-y-2 sm:space-y-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                           <div className="flex items-center gap-2">
-                            <Award className="size-5 text-primary" />
+                            <Award className="size-4 sm:size-5 text-primary shrink-0" />
                             <div>
-                              <h4 className="font-semibold">Certificates</h4>
-                              <p className="text-xs text-muted-foreground">
+                              <h4 className="font-semibold text-sm sm:text-base">Certificates</h4>
+                              <p className="text-[10px] sm:text-xs text-muted-foreground">
                                 Upload certificates for this trainee
                               </p>
                             </div>
@@ -1664,8 +1664,9 @@ export default function TraineeFormPage() {
                             type="button"
                             size="sm"
                             onClick={() => setUploadCertModalOpen(true)}
+                            className="w-full sm:w-auto text-xs"
                           >
-                            <Upload className="mr-2 size-4" />
+                            <Upload className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
                             Upload Certificate
                           </Button>
                         </div>
@@ -1723,24 +1724,24 @@ export default function TraineeFormPage() {
                                     : 'hover:border-primary/50'
                                 }`}
                               >
-                                <CardHeader>
+                                <CardHeader className="p-3 sm:p-6">
                                   <div className="flex items-start justify-between gap-2 mb-2">
-                                    <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                                      <Award className="size-6 text-primary" />
+                                    <div className="flex size-10 sm:size-12 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                                      <Award className="size-5 sm:size-6 text-primary" />
                                     </div>
                                     {isSelected && (
                                       <div className="flex-shrink-0">
-                                        <div className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                          <span className="text-xs font-bold">✓</span>
+                                        <div className="flex size-5 sm:size-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                          <span className="text-[10px] sm:text-xs font-bold">✓</span>
                                         </div>
                                       </div>
                                     )}
                                   </div>
-                                  <CardTitle className="line-clamp-2">{program.name}</CardTitle>
-                                  <CardDescription className="line-clamp-2">{program.description || 'No description available'}</CardDescription>
+                                  <CardTitle className="line-clamp-2 text-sm sm:text-base">{program.name}</CardTitle>
+                                  <CardDescription className="line-clamp-2 text-xs sm:text-sm">{program.description || 'No description available'}</CardDescription>
                                 </CardHeader>
-                                <CardContent>
-                                  <div className="space-y-2 text-sm">
+                                <CardContent className="p-3 sm:p-6 pt-0">
+                                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                                     {program.duration && (
                                       <div className="flex items-center justify-between">
                                         <span className="text-muted-foreground">Duration:</span>
@@ -1754,9 +1755,9 @@ export default function TraineeFormPage() {
                                       </div>
                                     )}
                                     {program.status && (
-                                      <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-                                        <span className="text-xs text-muted-foreground">Status:</span>
-                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                      <div className="flex items-center gap-2 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t">
+                                        <span className="text-[10px] sm:text-xs text-muted-foreground">Status:</span>
+                                        <span className={`text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full ${
                                           program.status === 'active'
                                             ? 'bg-green-100 text-green-800'
                                             : 'bg-gray-100 text-gray-800'
@@ -1989,55 +1990,61 @@ export default function TraineeFormPage() {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/trainees')}
-            >
-              <X className="mr-2 size-4" />
-              Cancel
-            </Button>
-            <Button
-              variant="outline"
-              onClick={prevStep}
-              disabled={currentStep === 1}
-            >
-              <ChevronLeft className="mr-2 size-4" />
-              Previous
-            </Button>
-          </div>
-
-          <div className="text-sm text-muted-foreground">
-            Step {currentStep} of {steps.length}
-          </div>
-
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pb-20 sm:pb-4">
+          {/* Mobile: Next at top, Previous and Cancel below */}
+          {/* Desktop: Cancel/Previous on left, Step indicator center, Next/Save on right */}
+          
           {currentStep < steps.length ? (
-            <Button type="button" onClick={nextStep}>
+            <Button type="button" onClick={nextStep} className="w-full sm:w-auto text-xs sm:text-sm order-1 sm:order-3">
               Next
-              <ChevronRight className="ml-2 size-4" />
+              <ChevronRight className="ml-1.5 sm:ml-2 size-3.5 sm:size-4" />
             </Button>
           ) : (
             <Button
               type="button"
               onClick={handleSubmit}
               disabled={loading || isVerifying}
+              className="w-full sm:w-auto text-xs sm:text-sm order-1 sm:order-3"
             >
               {loading || isVerifying ? (
                 <span className="flex items-center gap-2">
-                  <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   {loading
                     ? id ? 'Updating...' : 'Saving...'
                     : 'Verifying...'}
                 </span>
               ) : (
                 <>
-                  <Save className="mr-2 size-4" />
+                  <Save className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
                   {id ? 'Update Trainee' : 'Save Trainee'}
                 </>
               )}
             </Button>
           )}
+
+          <div className="text-xs sm:text-sm text-muted-foreground text-center order-2 sm:order-2">
+            Step {currentStep} of {steps.length}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 order-3 sm:order-1">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className="w-full sm:w-auto text-xs sm:text-sm"
+            >
+              <ChevronLeft className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/trainees')}
+              className="w-full sm:w-auto text-xs sm:text-sm"
+            >
+              <X className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
+              Cancel
+            </Button>
+          </div>
         </div>
       </div>
     </DashboardLayout>

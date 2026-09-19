@@ -300,15 +300,19 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       const fetchPendingCount = async () => {
         try {
           const api = await import('../services/api').then(m => m.default);
-          const response = await api.get('/registrations/pending-count');
+          const response = await api.get('/registrations/pending-count', undefined, { timeout: 5000 });
           setPendingRegistrationCount(response.data?.count || 0);
         } catch (error) {
-          // Silently fail
+          // Silently fail - set count to 0 on error
+          setPendingRegistrationCount(0);
         }
       };
       fetchPendingCount();
       const interval = setInterval(fetchPendingCount, 30000);
       return () => clearInterval(interval);
+    } else {
+      // Clear count if user doesn't have permission
+      setPendingRegistrationCount(0);
     }
   }, [user]);
 
@@ -386,13 +390,12 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card shadow-lg transition-transform duration-300 ease-out ${
         showBottomNav ? 'translate-y-0' : 'translate-y-full'
       }`}>
-        <div className="flex justify-between items-stretch h-16">
-          {/* Show first 5 items */}
-          {filteredNavigation.slice(0, 5).map((item) => {
+        <div className="grid grid-cols-5 items-stretch h-16">
+          {/* Show first 4 items to make room for More button */}
+          {filteredNavigation.slice(0, 4).map((item) => {
             const isCurrentActive = item.href && isActive(item.href);
             
-            // If item has children (like Settings), don't show it in the first 5
-            // This prevents the "href doesn't exist" issue
+            // Skip items with children in the main nav
             if (item.children) {
               return null;
             }
@@ -401,7 +404,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
               <Link
                 key={item.name}
                 to={item.href || '#'}
-                className={`flex flex-col items-center justify-center flex-1 px-2 py-2 text-xs gap-1 transition-colors ${
+                className={`flex flex-col items-center justify-center px-1 py-2 text-[10px] gap-1 transition-colors ${
                   isCurrentActive
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -411,19 +414,19 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
                 <span className="line-clamp-1 text-center">{item.name}</span>
               </Link>
             );
-          })}
+          }).filter(Boolean)}
 
           {/* More Menu for remaining items */}
-          {(filteredNavigation.length > 5 || filteredNavigation.some(item => item.children)) && (
+          {filteredNavigation.length > 4 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex flex-col items-center justify-center flex-1 px-2 py-2 text-xs gap-1 text-muted-foreground hover:text-foreground transition-colors border-l border-border">
+                <button className="flex flex-col items-center justify-center px-1 py-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground transition-colors">
                   <Settings className="size-5" />
                   <span>More</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="top" className="w-48 mb-2">
-                {filteredNavigation.slice(5).map((item) => (
+                {filteredNavigation.slice(4).map((item) => (
                   <div key={item.name}>
                     {item.children ? (
                       // Settings menu with children

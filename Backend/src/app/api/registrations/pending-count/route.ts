@@ -49,10 +49,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   }
 
   try {
-    const count = await registrationService.countPendingByTenant(context.tenantId);
+    // Add timeout to prevent hanging queries
+    const timeoutPromise = new Promise<number>((_, reject) => {
+      setTimeout(() => reject(new Error('Query timeout')), 5000);
+    });
+    
+    const countPromise = registrationService.countPendingByTenant(context.tenantId);
+    
+    const count = await Promise.race([countPromise, timeoutPromise]);
     return successResponse({ count });
   } catch (error) {
     // If counting fails, return 0 instead of error
+    console.error('[pending-count] Error fetching count:', error);
     return successResponse({ count: 0 });
   }
 });

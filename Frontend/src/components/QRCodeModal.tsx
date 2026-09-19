@@ -44,46 +44,50 @@ export default function QRCodeModal({ open, onOpenChange, item }: QRCodeModalPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Item QR Code</DialogTitle>
-          <DialogDescription>
+      <DialogContent 
+        className="max-h-[85vh] flex flex-col" 
+        style={{ width: 'calc(100% - 2rem)', maxWidth: '28rem' }}
+        hideCloseButton={true}
+      >
+        <DialogHeader className="space-y-0.5 shrink-0">
+          <DialogTitle className="text-base sm:text-lg">Item QR Code</DialogTitle>
+          <DialogDescription className="text-xs">
             Scan or download this QR code for item tracking
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="qr-modal-canvas flex justify-center rounded-lg border bg-muted/30 p-8">
+        <div className="flex-1 flex flex-col space-y-3 min-h-0">
+          <div className="qr-modal-canvas flex justify-center rounded-lg border bg-muted/30 p-3 sm:p-4">
             <QRCodeDisplay value={qrData} />
           </div>
 
-          <div className="space-y-2 rounded-lg bg-muted/50 p-4">
-            <h4 className="line-clamp-2">{item.name}</h4>
-            <div className="space-y-1 text-sm text-muted-foreground">
-              <div className="flex justify-between">
-                <span>ID:</span>
-                <span>#{item.id}</span>
+          <div className="space-y-1.5 rounded-lg bg-muted/50 p-3 shrink-0">
+            <h4 className="line-clamp-1 text-sm font-semibold">{item.name}</h4>
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0">ID:</span>
+                <span className="text-right break-all font-mono text-[10px]">#{item.id}</span>
               </div>
-              <div className="flex justify-between">
-                <span>Category:</span>
-                <span className="capitalize">{item.category}</span>
+              <div className="flex justify-between gap-2">
+                <span className="shrink-0">Category:</span>
+                <span className="capitalize text-right">{item.category}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 shrink-0">
             <Button
               variant="outline"
-              className="flex-1"
+              className="w-full h-10 text-sm"
               onClick={() => onOpenChange(false)}
             >
               Close
             </Button>
             <Button
-              className="flex-1"
+              className="w-full h-10 text-sm"
               onClick={downloadQR}
             >
-              <Download className="mr-2 size-4" />
+              <Download className="mr-1.5 size-3.5" />
               Download
             </Button>
           </div>

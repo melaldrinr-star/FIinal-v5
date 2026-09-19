@@ -486,13 +486,19 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) resetState(); onOpenChange(v); }}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col p-0">
+      <DialogContent 
+        className="max-w-md max-h-[88vh] sm:max-h-[85vh] overflow-hidden flex flex-col p-0"
+        style={{ 
+          width: 'calc(100% - 2rem)',
+          maxWidth: '28rem'
+        }}
+      >
 
         {/* ── 2FA verification step ── */}
         {twoFAStep ? (
           <>
-            <DialogHeader className="px-6 pt-6 pb-4">
-              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
+            <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+              <div className="mx-auto mb-3 sm:mb-4 flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
                 <span className="text-2xl text-primary-foreground">🔐</span>
               </div>
               <div className="text-center text-sm font-medium text-muted-foreground mb-2">
@@ -504,7 +510,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6">
               <OTPVerificationStep
                 title="Email Verification"
                 description="Enter the 6-digit code sent to your email"
@@ -528,8 +534,8 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
         ) : tenantStep && pendingSelection ? (
           /* ── Tenant selection step ── */
           <>
-            <DialogHeader className="px-6 pt-6 pb-4">
-              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
+            <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+              <div className="mx-auto mb-3 sm:mb-4 flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
                 <Building2 className="size-8 text-primary-foreground" />
               </div>
               <div className="text-center text-sm font-medium text-muted-foreground mb-2">
@@ -564,7 +570,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
               </div>
             </div>
 
-            <div className="flex gap-2 border-t px-6 py-4 bg-muted/30">
+            <div className="flex gap-2 border-t px-4 sm:px-6 py-3 sm:py-4 bg-muted/30">
               <Button
                 variant="outline"
                 className="flex-1"
@@ -585,7 +591,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
         ) : forgotPasswordStep ? (
           /* ── Forgot Password Flow ── */
           <>
-            <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
               <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary/10 shadow-lg">
                 <span className="text-2xl">🔐</span>
               </div>
@@ -597,7 +603,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-6">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6">
               {forgotPasswordStep1 && (
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -722,7 +728,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
               )}
             </div>
 
-            <div className="flex gap-3 border-t px-6 py-4 bg-muted/30">
+            <div className="flex gap-3 border-t px-4 sm:px-6 py-3 sm:py-4 bg-muted/30">
               <Button
                 variant="outline"
                 className="flex-1"
@@ -764,8 +770,8 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
         ) : (
           /* ── Credentials step ── */
           <>
-            <DialogHeader className="px-6 pt-6 pb-4">
-              <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
+            <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+              <div className="mx-auto mb-3 sm:mb-4 flex size-14 sm:size-16 items-center justify-center rounded-2xl bg-primary shadow-lg">
                 {cmsSettings?.appearance?.logo ? (
                   <img 
                     src={getFileUrl(cmsSettings.appearance.logo)} 
@@ -786,8 +792,8 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-6">
-                <div className="space-y-4 pb-6">
+              <div className="flex-1 overflow-y-auto px-4 sm:px-6">
+                <div className="space-y-3 sm:space-y-4 pb-4 sm:pb-6">
                   {preFilledUsername && (
                     <div className="rounded-lg border border-green-200 bg-green-50 p-3 mb-4">
                       <p className="text-sm text-green-800">
@@ -832,7 +838,7 @@ export default function LoginModal({ open, onOpenChange, onSwitchToSignup, preFi
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 border-t px-6 py-4 bg-muted/30">
+              <div className="flex flex-col gap-2 border-t px-4 sm:px-6 py-3 sm:py-4 bg-muted/30">
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>

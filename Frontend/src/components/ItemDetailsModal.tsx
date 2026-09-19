@@ -43,136 +43,124 @@ export default function ItemDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">Item Details</DialogTitle>
+      <DialogContent 
+        className="max-h-[85vh] flex flex-col p-0"
+        style={{ 
+          width: 'calc(100% - 2rem)',
+          maxWidth: '28rem'
+        }}
+        hideCloseButton={true}
+      >
+        <DialogHeader className="px-4 pt-4 pb-3 shrink-0 border-b">
+          <DialogTitle className="text-base sm:text-lg">Item Details</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
           {/* Photo */}
           {item.photoUrl && (
             <div className="flex justify-center">
               <img
                 src={item.photoUrl}
                 alt={item.name}
-                className="h-48 w-auto rounded-md object-cover shadow"
+                className="h-32 w-auto rounded-md object-cover shadow"
               />
             </div>
           )}
 
           {/* Header Info */}
-          <div className="flex items-start gap-4">
-            {!item.photoUrl && (
-              <div className="flex size-16 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                <Package className="size-8 text-primary" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <h3 className="mb-2">{item.name}</h3>
-              <Badge variant="secondary">{item.category}</Badge>
-            </div>
+          <div className="space-y-2">
+            <h3 className="text-base font-semibold">{item.name}</h3>
+            <Badge variant="secondary" className="text-xs">{item.category}</Badge>
           </div>
 
           {/* Description */}
           {item.description && (
             <div>
-              <h4 className="mb-2 text-sm font-medium">Description</h4>
-              <p className="text-muted-foreground">{item.description}</p>
+              <h4 className="mb-1 text-xs font-medium text-muted-foreground">Description</h4>
+              <p className="text-xs text-foreground">{item.description}</p>
             </div>
           )}
 
-          {/* Details Grid */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          {/* Details List */}
+          <div className="space-y-2">
             {/* Quantity */}
-            <div className="flex items-center gap-3 p-3 rounded-lg border">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
-                <Package className="size-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Quantity</p>
-                <p className="font-semibold">{item.quantity}</p>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30">
+              <Package className="size-4 text-primary shrink-0" />
+              <div className="flex-1 flex justify-between items-center gap-2">
+                <span className="text-xs text-muted-foreground">Total Quantity</span>
+                <span className="font-semibold text-sm">{item.quantity}</span>
               </div>
             </div>
 
             {/* Available */}
-            <div className="flex items-center gap-3 p-3 rounded-lg border">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-secondary/10">
-                <CheckCircle2 className="size-5 text-secondary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Available</p>
-                <p className={`font-semibold ${item.available === 0 ? 'text-destructive' : 'text-secondary'}`}>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30">
+              <CheckCircle2 className="size-4 text-secondary shrink-0" />
+              <div className="flex-1 flex justify-between items-center gap-2">
+                <span className="text-xs text-muted-foreground">Available</span>
+                <span className={`font-semibold text-sm ${item.available === 0 ? 'text-destructive' : 'text-secondary'}`}>
                   {item.available}
-                </p>
+                </span>
               </div>
             </div>
 
             {/* Location */}
-            <div className="flex items-center gap-3 p-3 rounded-lg border">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-accent/10">
-                <MapPin className="size-5 text-accent-foreground" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Location</p>
-                <p className="font-semibold">{item.location}</p>
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30">
+              <MapPin className="size-4 text-accent-foreground shrink-0" />
+              <div className="flex-1 flex justify-between items-center gap-2">
+                <span className="text-xs text-muted-foreground">Location</span>
+                <span className="font-semibold text-sm">{item.location}</span>
               </div>
             </div>
 
-
-
             {/* Purchase Date */}
             {item.purchaseDate && (
-              <div className="flex items-center gap-3 p-3 rounded-lg border">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-secondary/10">
-                  <Calendar className="size-5 text-secondary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Purchase Date</p>
-                  <p className="font-semibold">{formatDate(item.purchaseDate)}</p>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30">
+                <Calendar className="size-4 text-secondary shrink-0" />
+                <div className="flex-1 flex justify-between items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Purchase Date</span>
+                  <span className="font-semibold text-sm">{formatDate(item.purchaseDate)}</span>
                 </div>
               </div>
             )}
 
             {/* Condition */}
             {item.condition && (
-              <div className="flex items-center gap-3 p-3 rounded-lg border">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-accent/10">
-                  <CheckCircle2 className="size-5 text-accent-foreground" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Condition</p>
-                  <p className="font-semibold capitalize">{item.condition}</p>
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/30">
+                <CheckCircle2 className="size-4 text-accent-foreground shrink-0" />
+                <div className="flex-1 flex justify-between items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Condition</span>
+                  <span className="font-semibold text-sm capitalize">{item.condition}</span>
                 </div>
               </div>
             )}
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-2 border-t pt-4">
+        {/* Action Buttons */}
+        <div className="shrink-0 px-4 pb-4 pt-3 border-t space-y-2">
+          <Button 
+            variant="outline" 
+            className="w-full text-sm h-10"
+            onClick={() => {
+              if (onViewQR) onViewQR(item);
+            }}
+          >
+            <QrCode className="mr-2 size-4" />
+            View QR Code
+          </Button>
+          {canEdit && (
             <Button 
-              variant="outline" 
-              className="flex-1"
+              variant="default" 
+              className="w-full text-sm h-10"
               onClick={() => {
-                if (onViewQR) onViewQR(item);
+                if (onEdit) onEdit(item);
+                onOpenChange(false);
               }}
             >
-              <QrCode className="mr-2 size-4" />
-              View QR Code
+              <Edit className="mr-2 size-4" />
+              Edit Item
             </Button>
-            {canEdit && (
-              <Button 
-                variant="default" 
-                className="flex-1"
-                onClick={() => {
-                  if (onEdit) onEdit(item);
-                  onOpenChange(false);
-                }}
-              >
-                <Edit className="mr-2 size-4" />
-                Edit Item
-              </Button>
-            )}
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
