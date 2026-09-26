@@ -34,6 +34,7 @@ interface Trainee {
   address?: string;
   emergencyContact?: string;
   emergencyContactNumber?: string;
+  employmentStatus?: string;
 }
 
 interface TraineeDetailsModalProps {
@@ -289,6 +290,15 @@ export default function TraineeDetailsModal({ trainee, open, onOpenChange, onEdi
                 <div className="min-w-0">
                   <p className="text-[10px] sm:text-xs text-muted-foreground">Address</p>
                   <p className="font-medium text-xs sm:text-sm">{trainee.address}</p>
+                </div>
+              </div>
+            )}
+            {trainee.employmentStatus && (
+              <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-lg bg-muted/40 text-xs sm:text-sm">
+                <GraduationCap className="size-3.5 sm:size-4 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Employment Status</p>
+                  <p className="font-medium text-xs sm:text-sm">{trainee.employmentStatus}</p>
                 </div>
               </div>
             )}

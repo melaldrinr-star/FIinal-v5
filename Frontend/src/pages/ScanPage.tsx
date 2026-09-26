@@ -148,23 +148,6 @@ export default function ScanPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-4">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Lending Scanner</h1>
-            <p className="mt-1 text-slate-600">Scan items to borrow them</p>
-          </div>
-          {lastLendingId && (
-            <button
-              onClick={handlePrintSlip}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition"
-            >
-              📄 Print Last Slip
-            </button>
-          )}
-        </div>
-      </div>
-      
       <QR_Scanner_Modal
         isOpen={isOpen}
         onClose={handleClose}

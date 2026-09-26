@@ -477,7 +477,10 @@ This is an official borrowing slip. Keep for your records.
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-h-[calc(100dvh-1rem)] max-w-2xl overflow-y-auto p-4 sm:max-h-[90vh] sm:p-6"
+        style={{ width: 'calc(100vw - 1rem)' }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="size-5" />
@@ -607,7 +610,7 @@ This is an official borrowing slip. Keep for your records.
         ) : null}
 
         {/* Actions */}
-        <div className="flex gap-2 justify-end pt-4 border-t">
+        <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleDownload} disabled={!lending || loading}>
             <Download className="mr-2 size-4" />
             Download

@@ -141,7 +141,10 @@ export default function AddItemModal({ open, onOpenChange, onSuccess }: AddItemM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[92vw] max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0"
+        style={{ width: 'calc(100vw - 1rem)' }}
+      >
         <DialogHeader className="px-4 sm:px-6 py-3 sm:py-4 pb-2 sm:pb-3">
           <DialogTitle className="text-lg sm:text-xl">Add New Item</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
@@ -295,7 +298,7 @@ export default function AddItemModal({ open, onOpenChange, onSuccess }: AddItemM
           </div>
 
           {/* Footer Actions */}
-          <div className="flex justify-end gap-1 sm:gap-2 border-t px-4 sm:px-6 py-2 sm:py-3 bg-muted/30 mt-2 sm:mt-0">
+          <div className="flex flex-col-reverse gap-2 border-t bg-muted/30 px-4 py-2 sm:flex-row sm:justify-end sm:gap-2 sm:px-6 sm:py-3">
             <Button 
               type="button" 
               variant="outline" 

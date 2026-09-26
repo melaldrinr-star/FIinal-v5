@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireTenantContext } from '@/middleware/tenantContext';
 import { logger } from '@/utils/logger';
-import { getSecureFilePath, REQUIREMENT_TYPES } from '@/services/trainingRequirementService';
+import { getSecureFilePath, getSecureFilePathById } from '@/services/trainingRequirementService';
 import { promises as fs } from 'fs';
 
 export async function GET(
@@ -14,6 +14,7 @@ export async function GET(
     const context = ctxResult.context!;
 
     const { id: traineeId, type: requirementType } = await params;
+    const fileId = new URL(request.url).searchParams.get('file_id');
 
     logger.info('[DOWNLOAD] Request received', { 
       traineeId, 
@@ -22,19 +23,24 @@ export async function GET(
       userId: context.userId 
     });
 
-    if (!requirementType || !REQUIREMENT_TYPES.includes(requirementType as any)) {
+    if (!requirementType) {
       logger.warn('[DOWNLOAD] Invalid requirement type', { requirementType });
       return NextResponse.json({ error: 'Invalid requirement type' }, { status: 400 });
     }
 
-    const filePath = await getSecureFilePath(context.tenantId, traineeId, requirementType as any);
+    const filePath = fileId
+      ? await getSecureFilePathById(context.tenantId, traineeId, fileId)
+      : await getSecureFilePath(context.tenantId, traineeId, requirementType as any);
     if (!filePath) {
       logger.warn('[DOWNLOAD] File not found', { 
         traineeId, 
         requirementType, 
         tenantId: context.tenantId 
       });
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: fileId ? 'This submitted file is no longer available on the server' : 'File not found' },
+        { status: fileId ? 410 : 404 }
+      );
     }
 
     const fileBuffer = await fs.readFile(filePath);

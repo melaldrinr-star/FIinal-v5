@@ -180,7 +180,7 @@ export const createTraineeSchema = z.object({
   year_graduated: z.string().min(4, 'Year graduated is required').max(4, 'Year must be 4 digits').regex(/^\d{4}$/, 'Year must be a 4-digit number'),
   classification: z.enum(['Out-of-School Youth', 'Student', 'Unemployed', 'Underemployed', '4Ps Beneficiary'], { required_error: 'Classification is required' }),
   disability: z.string().max(255).optional().nullable().transform(val => val === '' ? null : val),
-  employment_status: z.enum(['Employed', 'Unemployed', 'Self-employed', 'Student'], { required_error: 'Employment status is required' }),
+  employment_status: z.string().min(1, 'Employment status is required').max(100, 'Employment status must not exceed 100 characters').trim(),
   status: z.enum(['active', 'inactive', 'completed', 'dropped']).optional().nullable(),
   program_id: z.string().uuid('Invalid program ID').optional().nullable(),
   photo_path: z.string().optional().nullable(),
@@ -532,7 +532,7 @@ export const traineeRegistrationSchema = z.object({
     .default(''),
   classification: z.enum(['Out-of-School Youth', 'Student', 'Unemployed', 'Underemployed', '4Ps Beneficiary']),
   disability: z.string().max(255).optional().nullable().transform(v => v === '' ? null : v),
-  employment_status: z.enum(['Employed', 'Unemployed', 'Self-employed', 'Student']),
+  employment_status: z.string().min(1, 'Employment status is required').max(100, 'Employment status must not exceed 100 characters').trim(),
 
   // Program to enroll in
   program_id: z.string().uuid('Invalid program ID'),

@@ -28,7 +28,7 @@ export const REQUIREMENT_TYPES = [
   'barangay_no_grade_certification',
 ] as const;
 
-export type RequirementType = typeof REQUIREMENT_TYPES[number];
+export type RequirementType = string;
 
 // Mandatory requirements (marriage certificate is optional)
 export const MANDATORY_REQUIREMENTS = [
@@ -90,11 +90,6 @@ export async function uploadRequirementFile(
     mimeType,
     userId,
   } = params;
-
-  // Validate requirement type
-  if (!REQUIREMENT_TYPES.includes(requirementType)) {
-    throw new Error(`Invalid requirement type: ${requirementType}`);
-  }
 
   // Check if there's an existing file for this requirement type
   const existingFile = await getRequirementFile(tenantId, traineeId, requirementType);
@@ -393,6 +388,36 @@ export async function getSecureFilePath(
       absolutePath,
       error: error
     });
+    return null;
+  }
+}
+
+/**
+ * Resolve one submitted file by its database ID for secure downloads.
+ * The tenant and trainee checks prevent a file ID from crossing boundaries.
+ */
+export async function getSecureFilePathById(
+  tenantId: string,
+  traineeId: string,
+  fileId: string
+): Promise<string | null> {
+  const { data: file, error } = await supabaseAdmin
+    .from('training_requirement_files')
+    .select('file_path')
+    .eq('id', fileId)
+    .eq('tenant_id', tenantId)
+    .eq('trainee_id', traineeId)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!file?.file_path || !pathBelongsToTenant(file.file_path, tenantId)) return null;
+
+  const absolutePath = path.join(UPLOAD_BASE_DIR, file.file_path.replace(/^\/uploads\//, ''));
+  try {
+    await fs.access(absolutePath);
+    return absolutePath;
+  } catch {
     return null;
   }
 }

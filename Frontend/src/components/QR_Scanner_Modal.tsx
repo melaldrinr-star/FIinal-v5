@@ -333,13 +333,13 @@ export default function QR_Scanner_Modal({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 z-50 flex items-center sm:items-center justify-center bg-black/40 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-2 pt-4 backdrop-blur-md sm:items-center sm:px-0 sm:pt-0"
       role="dialog"
       aria-modal="true"
       onClick={handleClose}
     >
       <div 
-        className="w-full max-w-md sm:w-96 h-auto bg-white rounded-2xl sm:rounded-xl overflow-hidden flex flex-col max-h-[90dvh]"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl bg-white shadow-2xl sm:max-h-[90dvh] sm:w-96 sm:rounded-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <canvas ref={canvasRef} className="hidden" />
@@ -398,7 +398,7 @@ export default function QR_Scanner_Modal({
         </div>
 
         {/* ── Camera ────────────────────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-hidden relative bg-black border-4 border-green-400 sm:aspect-video">
+        <div className="relative aspect-video shrink-0 overflow-hidden border-4 border-green-400 bg-black">
           <video
             ref={videoRef}
             autoPlay
@@ -525,7 +525,7 @@ export default function QR_Scanner_Modal({
 
         {/* ── Empty State ───────────────────────────────────────────────────────── */}
         {!scannedItem && (
-          <div className="flex-1 flex items-center justify-center p-4">
+          <div className="flex min-h-20 shrink-0 items-center justify-center p-4">
             <p className="text-sm text-slate-600 text-center">Position QR code in frame to scan</p>
           </div>
         )}

@@ -44,7 +44,7 @@ export default function ItemDetailsModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-h-[85vh] flex flex-col p-0"
+        className="flex max-h-[calc(100dvh-1rem)] flex-col p-0 sm:max-h-[85vh]"
         style={{ 
           width: 'calc(100% - 2rem)',
           maxWidth: '28rem'

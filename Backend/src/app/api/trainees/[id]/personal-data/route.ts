@@ -37,7 +37,7 @@ const rectificationSchema = z.object({ first_name:              z.string().min(1
   barangay:                z.string().min(1).max(100).optional(),
   street:                  z.string().min(1).optional(),
   civil_status:            z.enum(['Single', 'Married', 'Widowed', 'Separated']).optional(),
-  employment_status:       z.enum(['Employed', 'Unemployed', 'Self-employed', 'Student']).optional(),
+  employment_status:       z.string().min(1).max(100).trim().optional(),
   emergency_contact_name:  z.string().max(255).optional().nullable(),
   emergency_contact_phone: z.string().max(50).optional().nullable(), });
 

@@ -13,6 +13,7 @@ import { updateTraineeSchema } from '@/utils/validators';
 import { successResponse, notFoundResponse, noContentResponse, errorResponse, forbiddenResponse } from '@/utils/responses';
 import { withErrorHandler } from '@/middleware/errorHandler';
 import { activityLogService } from '@/services/activityLogService';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { handleOptionsRequest } from '@/middleware/cors';
 import { z } from 'zod';
 
@@ -97,6 +98,32 @@ const { id } = await params;
 
 const existing = await traineeService.getTraineeById(context, id);
   if (!existing) { return notFoundResponse('Trainee not found'); }
+
+  const { data: activeEnrollments, error: enrollmentError } = await supabaseAdmin
+    .from('enrollments')
+    .select('id, status, programs(name)')
+    .eq('tenant_id', context.tenantId)
+    .eq('trainee_id', id)
+    .in('status', ['enrolled', 'active']);
+
+  if (enrollmentError) throw enrollmentError;
+
+  if (activeEnrollments && activeEnrollments.length > 0) {
+    const programNames = activeEnrollments
+      .map((enrollment: any) => enrollment.programs?.name)
+      .filter(Boolean);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: programNames.length > 0
+          ? `Cannot delete trainee while enrolled in an active program: ${programNames.join(', ')}`
+          : 'Cannot delete trainee while enrolled in an active program',
+        code: 'ACTIVE_PROGRAM_ENROLLMENT',
+      },
+      { status: 409 }
+    );
+  }
 
   await traineeService.deleteTrainee(id);
 

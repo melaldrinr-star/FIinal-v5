@@ -93,13 +93,6 @@ export default function RegistrationModal({
   const [requirementsError, setRequirementsError] = useState<string | null>(null);
     // Step 6: Requirements file uploads
   const [requirementFiles, setRequirementFiles] = useState<Record<string, File | null>>({
-    accomplished_learners_profile_form: null,
-    birth_certificate_copy: null,
-    marriage_certificate_copy: null,
-    id_pictures: null,
-    valid_id_copy: null,
-    report_card_tor_copy: null,
-    barangay_no_grade_certification: null,
   });
 
   // Fetch requirements when tenant is selected
@@ -448,23 +441,15 @@ export default function RegistrationModal({
     }
 
     if (s === 6) {
-      // FIXED: Check that all 6 required files are uploaded
-      // Do NOT check acknowledgedRequirements checkbox (this was the bug)
-      const REQUIRED_FILES = [
-        'accomplished_learners_profile_form',
-        'birth_certificate_copy',
-        'id_pictures',
-        'valid_id_copy',
-        'report_card_tor_copy',
-        'barangay_no_grade_certification',
-      ];
-
-      const allRequiredFilesPresent = REQUIRED_FILES.every(
-        (fileKey) => requirementFiles[fileKey as keyof typeof requirementFiles] !== null
+      const requiredFiles = requirementDefinitions
+        .filter((requirement) => requirement.is_mandatory)
+        .map((requirement) => requirement.requirement_type);
+      const allRequiredFilesPresent = requiredFiles.every(
+        (fileKey) => requirementFiles[fileKey] !== null && requirementFiles[fileKey] !== undefined
       );
 
       if (!allRequiredFilesPresent) {
-        errs.email = "Please upload all 6 required documents to proceed";
+        errs.email = 'Please upload all required documents to proceed';
       }
     }
 
@@ -510,18 +495,7 @@ export default function RegistrationModal({
   };
 
   const uploadRequirementFiles = async (traineeId: string): Promise<void> => {
-    const fileKeys = [
-      'accomplished_learners_profile_form',
-      'birth_certificate_copy',
-      'marriage_certificate_copy',
-      'id_pictures',
-      'valid_id_copy',
-      'report_card_tor_copy',
-      'barangay_no_grade_certification',
-    ];
-
-    for (const key of fileKeys) {
-      const file = requirementFiles[key as keyof typeof requirementFiles];
+    for (const [key, file] of Object.entries(requirementFiles)) {
       if (file) {
         try {
           const formDataToSend = new FormData();
@@ -898,68 +872,28 @@ export default function RegistrationModal({
                 </div>
 
                 <div className="space-y-3">
-                  <RequirementDropZone
-                    title="Accomplished Learner's Profile Form"
-                    description="A reflective form documenting your learning journey"
-                    isRequired={true}
-                    file={requirementFiles.accomplished_learners_profile_form}
-                    requirementType="accomplished_learners_profile_form"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, accomplished_learners_profile_form: file})}
-                  />
-
-                  <RequirementDropZone
-                    title="Photocopy of Birth Certificate (NSO/PSA)"
-                    description="Official photocopy from NSO or PSA"
-                    isRequired={true}
-                    file={requirementFiles.birth_certificate_copy}
-                    requirementType="birth_certificate_copy"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, birth_certificate_copy: file})}
-                  />
-
-                  <RequirementDropZone
-                    title="Photocopy of Marriage Certificate (PSA/NSO)"
-                    description="For married female trainees only"
-                    isRequired={false}
-                    file={requirementFiles.marriage_certificate_copy}
-                    requirementType="marriage_certificate_copy"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, marriage_certificate_copy: file})}
-                  />
-
-                  <RequirementDropZone
-                    title="3 pcs 1x1 ID Picture (white background)"
-                    description="3 pieces of 1x1 ID pictures with white background"
-                    isRequired={true}
-                    file={requirementFiles.id_pictures}
-                    requirementType="id_pictures"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, id_pictures: file})}
-                  />
-
-                  <RequirementDropZone
-                    title="Photocopy of Valid ID"
-                    description="Government-issued ID (passport, driver's license, etc.)"
-                    isRequired={true}
-                    file={requirementFiles.valid_id_copy}
-                    requirementType="valid_id_copy"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, valid_id_copy: file})}
-                  />
-
-                  <RequirementDropZone
-                    title="Certified True Copy of Report Card/TOR"
-                    description="Certified true copy of report card or transcript of records"
-                    isRequired={true}
-                    file={requirementFiles.report_card_tor_copy}
-                    requirementType="report_card_tor_copy"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, report_card_tor_copy: file})}
-                  />
-
-                  <RequirementDropZone
-                    title="Certification of No Grade Completed from barangay"
-                    description="Barangay certification stating no grade has been completed"
-                    isRequired={true}
-                    file={requirementFiles.barangay_no_grade_certification}
-                    requirementType="barangay_no_grade_certification"
-                    onFileChange={(file) => setRequirementFiles({...requirementFiles, barangay_no_grade_certification: file})}
-                  />
+                  {loadingRequirements ? (
+                    <p className="text-sm text-muted-foreground">Loading requirements...</p>
+                  ) : requirementsError ? (
+                    <p className="text-sm text-destructive">{requirementsError}</p>
+                  ) : requirementDefinitions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No active requirements are configured for this organization.</p>
+                  ) : (
+                    requirementDefinitions.map((requirement) => (
+                      <RequirementDropZone
+                        key={requirement.id}
+                        title={requirement.display_name}
+                        description={requirement.description}
+                        isRequired={requirement.is_mandatory}
+                        file={requirementFiles[requirement.requirement_type] || null}
+                        requirementType={requirement.requirement_type}
+                        onFileChange={(file) => setRequirementFiles((previous) => ({
+                          ...previous,
+                          [requirement.requirement_type]: file,
+                        }))}
+                      />
+                    ))
+                  )}
                 </div>
 
                 {errors.email && step === 6 && (

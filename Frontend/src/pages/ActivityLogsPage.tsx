@@ -694,12 +694,12 @@ export default function ActivityLogsPage() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between pt-4 border-t">
-                <p className="text-xs text-muted-foreground">
+              <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-center text-xs text-muted-foreground sm:text-left">
                   Showing {startIndex + 1} to {Math.min(startIndex + rowsPerPage, filteredLogs.length)} of {filteredLogs.length} logs
                 </p>
-                <Pagination>
-                  <PaginationContent className="gap-1">
+                <Pagination className="w-full sm:w-auto">
+                  <PaginationContent className="flex-wrap justify-center gap-1 sm:justify-end">
                     <PaginationItem>
                       <PaginationPrevious 
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}

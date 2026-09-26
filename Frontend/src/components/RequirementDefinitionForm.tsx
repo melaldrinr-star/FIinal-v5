@@ -164,8 +164,18 @@ export function RequirementDefinitionForm({
   } = useRequirementDefinition(requirementId || '');
 
   // Mutations for create and update
-  const { mutate: createRequirement, isPending: isCreating, isError: isCreateError } = useCreateRequirementDefinition();
-  const { mutate: updateRequirement, isPending: isUpdating, isError: isUpdateError } = useUpdateRequirementDefinition();
+  const {
+    mutate: createRequirement,
+    isPending: isCreating,
+    isError: isCreateError,
+    error: createError,
+  } = useCreateRequirementDefinition();
+  const {
+    mutate: updateRequirement,
+    isPending: isUpdating,
+    isError: isUpdateError,
+    error: updateError,
+  } = useUpdateRequirementDefinition();
 
   const isSubmitting = isCreating || isUpdating;
 
@@ -326,8 +336,8 @@ export function RequirementDefinitionForm({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   {isEditMode
-                    ? 'Failed to update requirement. Please check your input and try again.'
-                    : 'Failed to create requirement. Please check your input and try again.'}
+                    ? updateError?.message || 'Failed to update requirement. Please check your input and try again.'
+                    : createError?.message || 'Failed to create requirement. Please check your input and try again.'}
                 </AlertDescription>
               </Alert>
             )}
@@ -467,7 +477,7 @@ export function RequirementDefinitionForm({
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting || !form.formState.isValid}
+                disabled={isSubmitting}
                 className="gap-2"
               >
                 {isSubmitting ? (

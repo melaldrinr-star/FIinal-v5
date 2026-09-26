@@ -44,7 +44,6 @@ import {
   BookOpen,
   ChevronRight,
   Settings,
-  BarChart3,
 } from 'lucide-react';
 import logger from '../utils/logger';
 
@@ -166,19 +165,6 @@ export default function RequirementsManagementPage() {
               </p>
             </div>
             <div className="flex gap-2 flex-col sm:flex-row w-full sm:w-auto">
-              <Button
-                onClick={() => {
-                  setIsNavigating(true);
-                  navigate('/admin/requirements/analytics');
-                }}
-                disabled={isNavigating}
-                variant="outline"
-                size="sm"
-                className="sm:size-default w-full sm:w-auto"
-              >
-                <BarChart3 className="mr-2 size-4" />
-                Analytics
-              </Button>
               <Button
                 onClick={handleAddNewRequirement}
                 disabled={isNavigating}

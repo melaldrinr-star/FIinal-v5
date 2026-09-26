@@ -387,8 +387,8 @@ export default function ProgramsPage() {
               </p>
             </CardContent>
           </Card>
-        ) : (viewMode === 'grid' && filteredPrograms.length > 0) && (
-          <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        ) : filteredPrograms.length > 0 && (
+          <div className={`${viewMode === 'grid' ? 'grid' : 'grid sm:hidden'} gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`}>
             {filteredPrograms.map((program) => {
               const IconComponent = getIconComponent(program.icon);
               const stats = programStats[program.id];

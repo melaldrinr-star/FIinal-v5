@@ -22,6 +22,8 @@ import {
   notifyTrainingReminder,
   notifyTrainingCompletion,
 } from '@/services/notificationService';
+import { activityLogService } from '@/services/activityLogService';
+import { lendingService } from '@/services/lendingService';
 import { z } from 'zod';
 
 // Validation schemas
@@ -66,6 +68,60 @@ const notificationSchema = z.discriminatedUnion('type', [
 export async function OPTIONS(request: NextRequest) {
   return handleOptionsRequest(request);
 }
+
+// GET /api/notifications - Get role- and tenant-scoped in-app notifications
+export const GET = withErrorHandler(async (request: NextRequest) => {
+  const ctxResult = requireTenantContext(request);
+  if (ctxResult.error) return ctxResult.error as NextResponse;
+
+  const context = ctxResult.context;
+  const roleEntityTypes: Record<string, string[]> = {
+    super_admin: ['item', 'lending', 'user', 'trainee', 'program', 'anomaly'],
+    local_admin: ['item', 'lending', 'user', 'trainee', 'program', 'anomaly'],
+    staff_inventory_manager: ['item', 'lending'],
+    staff_training_coordinator: ['trainee', 'program'],
+    trainee: [],
+  };
+  const allowedEntityTypes = roleEntityTypes[context.role] || [];
+
+  const logs = allowedEntityTypes.length > 0
+    ? await activityLogService.getAllLogs({
+        tenant_id: context.tenantId,
+        is_super_admin: context.isSuperAdmin,
+        limit: 50,
+      })
+    : [];
+
+  const notifications = logs
+    .filter((log) => allowedEntityTypes.includes(log.entity_type))
+    .map((log: any) => ({
+      id: `activity-${log.id}`,
+      type: 'activity',
+      title: log.description || `${log.action} ${log.entity_type}`,
+      description: `${log.module || log.entity_type} activity by ${log.userName || 'system'}`,
+      createdAt: log.created_at,
+      href: log.entity_type === 'item' ? `/items/${log.entity_id}/edit`
+        : log.entity_type === 'lending' ? `/lendings/${log.entity_id}/slip`
+        : log.entity_type === 'program' ? `/programs/${log.entity_id}`
+        : log.entity_type === 'trainee' ? `/trainees/${log.entity_id}/edit`
+        : '/dashboard',
+    }));
+
+  if (['super_admin', 'local_admin', 'staff_inventory_manager'].includes(context.role)) {
+    const overdue = await lendingService.getOverdueLendings(context);
+    notifications.push(...overdue.map((item: any) => ({
+      id: `overdue-${item.id}`,
+      type: 'overdue',
+      title: 'Overdue item',
+      description: `${item.item?.name || 'Inventory item'} is overdue${item.borrower_name ? ` for ${item.borrower_name}` : ''}`,
+      createdAt: item.expected_return_date,
+      href: '/lendings',
+    })));
+  }
+
+  notifications.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return successResponse({ notifications: notifications.slice(0, 50), unreadCount: notifications.length });
+});
 
 // POST /api/notifications - Trigger a notification (tenant-scoped, Req 12.5)
 export const POST = withErrorHandler(async (request: NextRequest) => {

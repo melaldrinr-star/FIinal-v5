@@ -27,6 +27,7 @@
  */
 
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRequirementDefinitions } from '../hooks/useRequirementDefinitions';
 import { RequirementDefinition } from '../types/requirementDefinition';
 import {
@@ -63,14 +64,15 @@ import {
   SelectValue,
 } from './ui/select';
 import { Input } from './ui/input';
+import { toast } from 'sonner';
+import { useUpdateRequirementDefinition } from '../hooks/useUpdateRequirementDefinition';
 import {
   Eye,
   Edit2,
   Trash2,
   AlertTriangle,
-  CheckCircle2,
-  Clock,
   Filter,
+  MoreHorizontal,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -128,13 +130,13 @@ export function RequirementDefinitionsList({
   // State for filtering and pagination
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
-  const [sortBy, setSortBy] = useState<'name' | 'mandatory' | 'completion_rate'>(
-    'name'
-  );
+  const [sortBy, setSortBy] = useState<'name' | 'mandatory'>('name');
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>(
     'all'
   );
   const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
+  const { mutateAsync: updateRequirement } = useUpdateRequirementDefinition();
 
   // Determine isActive query parameter based on filter
   const isActiveQuery =
@@ -179,7 +181,7 @@ export function RequirementDefinitionsList({
 
   // Handle sort change
   const handleSortChange = (newSort: string) => {
-    setSortBy(newSort as 'name' | 'mandatory' | 'completion_rate');
+    setSortBy(newSort as 'name' | 'mandatory');
     setPage(1); // Reset to first page when changing sort
     logger.info('[RequirementDefinitionsList] Sort changed', { sortBy: newSort });
   };
@@ -205,7 +207,7 @@ export function RequirementDefinitionsList({
     logger.info('[RequirementDefinitionsList] Edit clicked', {
       requirementId: requirement.id,
     });
-    // TODO: Navigate to edit page or open edit modal
+    navigate(`/admin/requirements/${requirement.id}/edit`);
   };
 
   // Handle delete action (stub for integration with delete confirmation)
@@ -213,7 +215,18 @@ export function RequirementDefinitionsList({
     logger.info('[RequirementDefinitionsList] Delete clicked', {
       requirementId: requirement.id,
     });
-    // TODO: Show delete confirmation modal and soft delete via API
+    void (async () => {
+      if (!window.confirm(`Delete "${requirement.display_name}"?`)) return;
+
+      try {
+        await updateRequirement(requirement.id, { isActive: false });
+        toast.success('Requirement deleted successfully');
+        await refetch();
+      } catch (error) {
+        logger.error('[RequirementDefinitionsList] Delete failed', { error });
+        toast.error('Failed to delete requirement');
+      }
+    })();
   };
 
   // Generate pagination items
@@ -462,30 +475,23 @@ export function RequirementDefinitionsList({
                   <SelectContent>
                     <SelectItem value="name">Name</SelectItem>
                     <SelectItem value="mandatory">Mandatory</SelectItem>
-                    <SelectItem value="completion_rate">
-                      Completion Rate
-                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-lg border overflow-x-auto">
-              <Table>
+            {/* Desktop table */}
+            <div className="hidden md:block rounded-lg border overflow-x-auto">
+              <Table className="min-w-[900px] xl:min-w-0 xl:table-fixed">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[200px]">Display Name</TableHead>
                     <TableHead className="w-[250px]">Description</TableHead>
-                    <TableHead className="w-[100px]">Type</TableHead>
+                    <TableHead className="hidden w-[100px] xl:table-cell">Type</TableHead>
                     <TableHead className="text-center w-[80px]">
                       Mandatory
                     </TableHead>
                     <TableHead className="text-center w-[80px]">Active</TableHead>
-                    <TableHead className="text-center w-[120px]">
-                      Completion
-                    </TableHead>
-                    <TableHead className="text-center w-[200px]">Stats</TableHead>
                     <TableHead className="text-center w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -495,18 +501,18 @@ export function RequirementDefinitionsList({
                       key={requirement.id}
                       className="hover:bg-muted/50 cursor-pointer"
                     >
-                      <TableCell className="font-semibold">
+                      <TableCell className="max-w-[200px] font-semibold">
                         <button
                           onClick={() => handleViewDetails(requirement)}
-                          className="hover:underline text-left"
+                          className="block max-w-full truncate text-left hover:underline"
                         >
                           {requirement.display_name}
                         </button>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground truncate max-w-[250px]">
+                      <TableCell className="max-w-[250px] whitespace-normal break-words text-sm text-muted-foreground">
                         {requirement.description}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden xl:table-cell">
                         <span className="text-xs text-muted-foreground">
                           {requirement.requirement_type}
                         </span>
@@ -540,51 +546,10 @@ export function RequirementDefinitionsList({
                         )}
                       </TableCell>
                       <TableCell className="text-center">
-                        {requirement.submission_stats ? (
-                          <div className="flex items-center justify-center gap-1">
-                            <div className="w-12 h-6 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-green-500 transition-all"
-                                style={{
-                                  width: `${requirement.submission_stats.completion_rate}%`,
-                                }}
-                              ></div>
-                            </div>
-                            <span className="text-xs font-semibold">
-                              {requirement.submission_stats.completion_rate}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            No data
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-1 text-xs">
-                          {requirement.submission_stats && (
-                            <>
-                              <div className="flex items-center gap-0.5">
-                                <Clock className="h-3 w-3 text-yellow-500" />
-                                <span>{requirement.submission_stats.pending_count}</span>
-                              </div>
-                              <div className="flex items-center gap-0.5">
-                                <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                <span>{requirement.submission_stats.verified_count}</span>
-                              </div>
-                              <div className="flex items-center gap-0.5">
-                                <AlertTriangle className="h-3 w-3 text-red-500" />
-                                <span>{requirement.submission_stats.rejected_count}</span>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              ⋮
+                            <Button variant="ghost" size="icon" aria-label={`Actions for ${requirement.display_name}`}>
+                              <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
@@ -617,9 +582,81 @@ export function RequirementDefinitionsList({
               </Table>
             </div>
 
+            {/* Mobile cards */}
+            <div className="space-y-3 md:hidden">
+              {filteredData.map((requirement) => (
+                <article key={requirement.id} className="rounded-lg border bg-card p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <button
+                      onClick={() => handleViewDetails(requirement)}
+                      className="min-w-0 text-left font-semibold leading-tight hover:underline"
+                    >
+                      <span className="break-words">{requirement.display_name}</span>
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Actions for ${requirement.display_name}`}
+                          className="-mr-2 -mt-2 shrink-0"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewDetails(requirement)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(requirement)}>
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(requirement)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <p className="mt-2 break-words text-sm leading-5 text-muted-foreground">
+                    {requirement.description}
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-muted-foreground">Type</p>
+                      <p className="mt-1 break-words font-medium">{requirement.requirement_type}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Status</p>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        <Badge variant={requirement.is_mandatory ? 'default' : 'outline'}>
+                          {requirement.is_mandatory ? 'Mandatory' : 'Optional'}
+                        </Badge>
+                        <Badge
+                          variant={requirement.is_active ? 'default' : 'outline'}
+                          className={requirement.is_active ? 'bg-green-600 hover:bg-green-700' : 'text-gray-500'}
+                        >
+                          {requirement.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                </article>
+              ))}
+            </div>
+
             {/* Pagination Controls */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm text-muted-foreground">Items per page:</span>
                 <Select value={String(limit)} onValueChange={handleLimitChange}>
                   <SelectTrigger className="w-[70px]">
@@ -634,14 +671,14 @@ export function RequirementDefinitionsList({
                 </Select>
               </div>
 
-              <div className="text-sm text-muted-foreground">
+              <div className="text-center text-sm text-muted-foreground">
                 Showing {(page - 1) * limit + 1} to{' '}
                 {Math.min(page * limit, pagination.total)} of{' '}
                 {pagination.total} requirements
               </div>
 
               <Pagination>
-                <PaginationContent>
+                <PaginationContent className="flex-wrap justify-center">
                   <PaginationItem>
                     <PaginationPrevious
                       onClick={() =>

@@ -126,11 +126,14 @@ export default function AddLendingModal({ open, onOpenChange, onSuccess, presele
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-h-[calc(100dvh-1rem)] max-w-md overflow-y-auto p-4 sm:max-h-[90vh] sm:p-6"
+        style={{ width: 'calc(100vw - 1rem)' }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <PackagePlus className="size-5" />
-            New Lending
+            Borrow Item
           </DialogTitle>
           <DialogDescription>Record a new item borrowing</DialogDescription>
         </DialogHeader>
@@ -226,11 +229,11 @@ export default function AddLendingModal({ open, onOpenChange, onSuccess, presele
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" className="w-full sm:w-auto" disabled={loading}>
               {loading ? 'Saving...' : 'Create Lending'}
             </Button>
           </div>

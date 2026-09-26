@@ -18,6 +18,13 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   if ('error' in authResult) return authResult.error as NextResponse;
 
   const tenantId = authResult.user.tenantId;
+  const { searchParams } = new URL(request.url);
+  const startDate = searchParams.get('startDate') || searchParams.get('start_date') || undefined;
+  const endDate = searchParams.get('endDate') || searchParams.get('end_date') || undefined;
+  const endDateExclusive = endDate
+    ? new Date(`${endDate}T00:00:00.000Z`)
+    : undefined;
+  if (endDateExclusive) endDateExclusive.setUTCDate(endDateExclusive.getUTCDate() + 1);
 
   // Fetch all required data in parallel, scoped to the current tenant
 
@@ -27,9 +34,26 @@ const [
     lendingsResult,
     programsResult,
   ] = await Promise.all([
-    supabaseAdmin.from('trainees').select('status').eq('tenant_id', tenantId),
+    (() => {
+      let query = supabaseAdmin
+        .from('trainees')
+        .select('status, created_at, employment_status')
+        .eq('tenant_id', tenantId)
+        .is('deleted_at', null);
+      if (startDate) query = query.gte('created_at', `${startDate}T00:00:00.000Z`);
+      if (endDateExclusive) query = query.lt('created_at', endDateExclusive.toISOString());
+      return query;
+    })(),
     supabaseAdmin.from('items').select('quantity, available_quantity, status').eq('tenant_id', tenantId),
-    supabaseAdmin.from('lendings').select('status, expected_return_date, actual_return_date').eq('tenant_id', tenantId),
+    (() => {
+      let query = supabaseAdmin
+        .from('lendings')
+        .select('status, expected_return_date, actual_return_date, lent_date')
+        .eq('tenant_id', tenantId);
+      if (startDate) query = query.gte('lent_date', startDate);
+      if (endDateExclusive) query = query.lt('lent_date', endDateExclusive.toISOString().slice(0, 10));
+      return query;
+    })(),
     supabaseAdmin.from('programs').select('status').eq('tenant_id', tenantId),
   ]);
 
@@ -47,6 +71,11 @@ const trainees = traineesResult.data || [];
     completed: trainees.filter(t => t.status === 'completed').length,
     inactive: trainees.filter(t => t.status === 'inactive').length,
   };
+  const employmentStatusCounts = trainees.reduce((counts: Record<string, number>, trainee) => {
+    const status = trainee.employment_status || 'Unknown';
+    counts[status] = (counts[status] || 0) + 1;
+    return counts;
+  }, {});
 
   // Inventory statistics
 
@@ -84,6 +113,7 @@ const programs = programsResult.data || [];
 
   return successResponse({
     trainees: traineeStats,
+    employmentStatusCounts,
     inventory: inventoryStats,
     lending: lendingStats,
     programs: programStats,

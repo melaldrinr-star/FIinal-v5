@@ -26,6 +26,7 @@ import {
 } from '@/utils/responses';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { z } from 'zod';
+import crypto from 'crypto';
 import { calculateSubmissionStats, applySorting } from './submission-stats';
 
 // Validation schema for query parameters
@@ -40,6 +41,12 @@ type QueryParams = z.infer<typeof queryParamsSchema>;
 
 // Validation schema for POST request body (create requirement definition)
 const createRequirementSchema = z.object({
+  requirement_type: z
+    .string()
+    .min(1, 'Requirement type is required')
+    .max(255)
+    .regex(/^[a-z0-9_]+$/, 'Requirement type must contain only lowercase letters, numbers, and underscores')
+    .optional(),
   display_name: z
     .string()
     .min(1, 'Display name is required')
@@ -63,6 +70,7 @@ const createRequirementSchema = z.object({
     .optional()
     .default(0)
     .describe('Display order in UI (lower numbers = higher priority)'),
+  is_active: z.boolean().optional().default(true),
 }).strict();
 
 type CreateRequirementInput = z.infer<typeof createRequirementSchema>;
@@ -130,7 +138,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   // 3. Build query for requirement definitions
   let query = supabaseAdmin
     .from('requirement_definitions')
-    .select(isPublic ? 'id,display_name,description,is_mandatory,display_order,applicability_rules' : '*', { count: 'exact' })
+    .select(isPublic ? 'id,requirement_type,display_name,description,is_mandatory,is_active,display_order,applicability_rules' : '*', { count: 'exact' })
     .eq('tenant_id', tenantId)
     .is('deleted_at', null);
 
@@ -330,16 +338,29 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     throw error;
   }
 
+  const baseRequirementType = (createData.requirement_type || createData.display_name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 220) || 'custom_requirement';
+  const requirementType = createData.requirement_type || `${baseRequirementType}_${crypto
+      .createHash('sha1')
+      .update(createData.display_name.trim())
+      .digest('hex')
+      .slice(0, 8)}`;
+
   // 4. Create the requirement definition
   const { data: newRequirement, error: createError } = await supabaseAdmin
     .from('requirement_definitions')
     .insert([
       {
         tenant_id: tenantId,
+        requirement_type: requirementType,
         display_name: createData.display_name,
         description: createData.description,
         is_mandatory: createData.is_mandatory,
-        is_active: true, // Always start as active
+        is_active: createData.is_active,
         applicability_rules: createData.applicability_rules || null,
         display_order: createData.display_order || 0,
         created_at: new Date().toISOString(),
@@ -350,6 +371,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     .single();
 
   if (createError) {
+    if (createError.code === '22P02' || createError.code === '42804') {
+      return errorResponse(
+        'Custom requirement types are not enabled. Apply Backend/migrations/013-custom-requirement-types/001_allow_custom_requirement_types.sql first.',
+        503
+      );
+    }
+
     // Check if this is a duplicate requirement_type error
     if (createError.code === '23505') { // Unique constraint violation
       return errorResponse(
@@ -364,6 +392,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   return createdResponse(
     {
       id: newRequirement.id,
+      requirement_type: newRequirement.requirement_type,
       display_name: newRequirement.display_name,
       description: newRequirement.description,
       is_mandatory: newRequirement.is_mandatory,

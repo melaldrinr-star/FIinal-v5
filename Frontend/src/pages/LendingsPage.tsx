@@ -166,7 +166,7 @@ export default function LendingsPage() {
   );
 
   return (
-    <DashboardLayout title="Lending Management">
+    <DashboardLayout title="Borrowing Management">
       <AddLendingModal
         open={lendingModalOpen}
         onOpenChange={setLendingModalOpen}
@@ -176,7 +176,7 @@ export default function LendingsPage() {
         {/* Header */}
         <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h2 className="truncate">Lendings</h2>
+            <h2 className="truncate">Borrowings</h2>
             <p className="text-xs sm:text-sm text-muted-foreground">Track borrowing and returning of items</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
@@ -212,7 +212,7 @@ export default function LendingsPage() {
               onClick={() => setLendingModalOpen(true)}
             >
               <PackagePlus className="mr-1 sm:mr-2 size-4" />
-              <span className="hidden xs:inline">New Lending</span>
+              <span className="hidden xs:inline">Borrow Item</span>
               <span className="inline xs:hidden">Add</span>
             </Button>
             <Link to="/scan" className="flex-1 sm:flex-none">

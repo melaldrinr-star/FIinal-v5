@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireTenantContext } from '@/middleware/tenantContext';
 import { logger } from '@/utils/logger';
-import { uploadRequirementFile, getTraineeRequirementFiles, REQUIREMENT_TYPES } from '@/services/trainingRequirementService';
+import { uploadRequirementFile, getTraineeRequirementFiles } from '@/services/trainingRequirementService';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { successResponse } from '@/utils/responses';
 
@@ -23,7 +23,7 @@ export async function POST(
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    if (!requirementType || !REQUIREMENT_TYPES.includes(requirementType as any)) {
+    if (!requirementType) {
       return NextResponse.json({ error: 'Invalid requirement type' }, { status: 400 });
     }
 
@@ -39,6 +39,19 @@ export async function POST(
 
     if (trainee.tenant_id !== context.tenantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const { data: requirementDefinition } = await supabaseAdmin
+      .from('requirement_definitions')
+      .select('id')
+      .eq('tenant_id', context.tenantId)
+      .eq('requirement_type', requirementType)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (!requirementDefinition) {
+      return NextResponse.json({ error: 'Requirement definition not found' }, { status: 404 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

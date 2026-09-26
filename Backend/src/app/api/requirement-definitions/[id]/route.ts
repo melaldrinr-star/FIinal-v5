@@ -72,6 +72,8 @@ export const GET = withErrorHandler(async (
     is_active: requirement.is_active,
     applicability_rules: requirement.applicability_rules,
     display_order: requirement.display_order,
+    created_at: requirement.created_at,
+    updated_at: requirement.updated_at,
     submission_stats,
   });
 });
@@ -166,6 +168,8 @@ export const PATCH = withErrorHandler(async (
     description: updatedRequirement.description,
     is_mandatory: updatedRequirement.is_mandatory,
     is_active: updatedRequirement.is_active,
+    created_at: updatedRequirement.created_at,
+    updated_at: updatedRequirement.updated_at,
     submission_stats,
   });
 });

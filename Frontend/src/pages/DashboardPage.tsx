@@ -14,7 +14,7 @@ import {
 } from '../components/ui/pagination';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
-import { Users, Package, FileText, TrendingUp, TrendingDown, UserPlus, PackagePlus, QrCode, BarChart } from 'lucide-react';
+import { Users, Package, FileText, TrendingUp, TrendingDown, UserPlus, PackagePlus, QrCode, BarChart, GraduationCap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { dashboardLogger } from '../utils/activityLogger';
 import reportService from '../services/reportService';
@@ -26,6 +26,9 @@ import logger from '../utils/logger';
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { user, hasPermission, isAuthReady } = useAuth();
+  const isLocalAdmin = user?.role === 'local_admin';
+  const isInventoryStaff = user?.role === 'staff_inventory_manager';
+  const isTrainingStaff = user?.role === 'staff_training_coordinator';
   const [stats, setStats] = useState<any[]>([]);
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -69,7 +72,7 @@ export default function DashboardPage() {
       
       // Map backend stats to cards
       const statsCards = [
-        {
+        ...(!isInventoryStaff ? [{
           label: 'Active Trainees',
           value: data.trainees?.active || 0,
           trend: `${data.trainees?.total || 0} total`,
@@ -77,8 +80,25 @@ export default function DashboardPage() {
           icon: Users,
           bg: 'bg-blue-500/10 dark:bg-blue-950/40',
           color: 'text-blue-600 dark:text-blue-400'
-        },
-        {
+        }] : []),
+        ...(isLocalAdmin ? [{
+          label: 'Total Trainees',
+          value: data.trainees?.total || 0,
+          trend: `${data.trainees?.completed || 0} completed`,
+          trendUp: true,
+          icon: Users,
+          bg: 'bg-cyan-500/10 dark:bg-cyan-950/40',
+          color: 'text-cyan-600 dark:text-cyan-400'
+        }, {
+          label: 'Total Programs',
+          value: data.programs?.total || 0,
+          trend: `${data.programs?.ongoing || 0} active`,
+          trendUp: true,
+          icon: GraduationCap,
+          bg: 'bg-emerald-500/10 dark:bg-emerald-950/40',
+          color: 'text-emerald-600 dark:text-emerald-400'
+        }] : []),
+        ...(!isTrainingStaff ? [{
           label: 'Available Items',
           value: data.inventory?.available || 0,
           trend: `${data.inventory?.total || 0} total`,
@@ -88,20 +108,70 @@ export default function DashboardPage() {
           color: 'text-sky-600 dark:text-sky-400'
         },
         {
-          label: 'Active Lendings',
+          label: 'Active Borrowings',
           value: data.lending?.active || 0,
           trend: `${data.lending?.overdue || 0} overdue`,
           trendUp: false,
           icon: FileText,
           bg: 'bg-indigo-500/10 dark:bg-indigo-950/40',
           color: 'text-indigo-600 dark:text-indigo-400'
-        }
+        }] : []),
+        ...(isTrainingStaff ? [{
+          label: 'Total Trainees',
+          value: data.trainees?.total || 0,
+          trend: `${data.trainees?.completed || 0} completed`,
+          trendUp: true,
+          icon: Users,
+          bg: 'bg-cyan-500/10 dark:bg-cyan-950/40',
+          color: 'text-cyan-600 dark:text-cyan-400'
+        }, {
+          label: 'Completed Trainees',
+          value: data.trainees?.completed || 0,
+          trend: `${data.trainees?.inactive || 0} inactive`,
+          trendUp: true,
+          icon: Users,
+          bg: 'bg-amber-500/10 dark:bg-amber-950/40',
+          color: 'text-amber-600 dark:text-amber-400'
+        }, {
+          label: 'Active Programs',
+          value: data.programs?.ongoing || 0,
+          trend: `${data.programs?.total || 0} total`,
+          trendUp: true,
+          icon: GraduationCap,
+          bg: 'bg-emerald-500/10 dark:bg-emerald-950/40',
+          color: 'text-emerald-600 dark:text-emerald-400'
+        }, {
+          label: 'Upcoming Programs',
+          value: data.programs?.upcoming || 0,
+          trend: `${data.programs?.completed || 0} completed`,
+          trendUp: true,
+          icon: GraduationCap,
+          bg: 'bg-violet-500/10 dark:bg-violet-950/40',
+          color: 'text-violet-600 dark:text-violet-400'
+        }, {
+          label: 'Completed Programs',
+          value: data.programs?.completed || 0,
+          trend: `${data.programs?.total || 0} total programs`,
+          trendUp: true,
+          icon: GraduationCap,
+          bg: 'bg-rose-500/10 dark:bg-rose-950/40',
+          color: 'text-rose-600 dark:text-rose-400'
+        }] : []),
+        ...(isInventoryStaff ? [{
+          label: 'Total Inventory Items',
+          value: data.inventory?.total || 0,
+          trend: `${data.inventory?.lowStock || 0} low stock`,
+          trendUp: false,
+          icon: Package,
+          bg: 'bg-emerald-500/10 dark:bg-emerald-950/40',
+          color: 'text-emerald-600 dark:text-emerald-400'
+        }] : [])
       ];
       
       setStats(statsCards);
       
-      // Fetch recent activity logs (only for users with permission)
-      if (hasPermission('canViewActivityLogs')) {
+      // Activity logs are outside the trainee/program scope for training staff.
+      if (!isTrainingStaff && hasPermission('canViewActivityLogs')) {
         try {
           const activityData = await activityLogService.getActivityLogs({});
           if (activityData && activityData.length > 0) {
@@ -114,7 +184,7 @@ export default function DashboardPage() {
       }
 
       // Fetch analytics data for dashboard visualization
-      try {
+      if (!isTrainingStaff) try {
         const analytics = await reportService.getActivityAnalytics();
         if (analytics && Object.keys(analytics).length > 0) {
           // Transform the analytics data into the format expected by the UI
@@ -193,19 +263,25 @@ export default function DashboardPage() {
               <CardDescription>Frequently used operations</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <Link to="/trainees/new">
+              <div className={`grid gap-3 ${isTrainingStaff || isInventoryStaff ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}>
+                {!isInventoryStaff && <Link to="/trainees/new">
                   <Button variant="outline" className="h-auto w-full flex-col gap-2 py-4">
                     <UserPlus className="size-6" />
                     Add Trainee
                   </Button>
-                </Link>
-                <Link to="/items/new">
+                </Link>}
+                {!isTrainingStaff && <Link to="/items/new">
                   <Button variant="outline" className="h-auto w-full flex-col gap-2 py-4">
                     <PackagePlus className="size-6" />
                     Add Item
                   </Button>
-                </Link>
+                </Link>}
+                {isTrainingStaff && <Link to="/programs/new">
+                  <Button variant="outline" className="h-auto w-full flex-col gap-2 py-4">
+                    <GraduationCap className="size-6" />
+                    Add Program
+                  </Button>
+                </Link>}
                 <Link to="/scan">
                   <Button variant="outline" className="h-auto w-full flex-col gap-2 py-4">
                     <QrCode className="size-6" />
@@ -219,38 +295,48 @@ export default function DashboardPage() {
 
         {/* Quick Actions - Mobile (2-Column Grid) */}
         <div className="sm:hidden">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Frequently used operations</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2 grid-cols-2">
-                <Link to="/trainees/new">
-                  <Button variant="ghost" className="h-auto w-full flex-col gap-2 p-3">
-                    <UserPlus className="size-5" />
-                    <span className="text-xs font-medium text-center">Add Trainee</span>
-                  </Button>
-                </Link>
-                <Link to="/items/new">
-                  <Button variant="ghost" className="h-auto w-full flex-col gap-2 p-3">
-                    <PackagePlus className="size-5" />
-                    <span className="text-xs font-medium text-center">Add Item</span>
-                  </Button>
-                </Link>
-                <Link to="/scan">
-                  <Button variant="ghost" className="h-auto w-full flex-col gap-2 p-3">
-                    <QrCode className="size-5" />
-                    <span className="text-xs font-medium text-center">Scan QR</span>
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="mb-3">
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Frequently used operations</CardDescription>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {!isInventoryStaff && <Link to="/trainees/new" className="block h-full">
+              <Card className="h-full transition-colors active:bg-muted">
+                <CardContent className="flex min-h-24 flex-col items-center justify-center gap-2 p-3 text-center">
+                  <UserPlus className="size-5" />
+                  <span className="text-xs font-medium">Add Trainee</span>
+                </CardContent>
+              </Card>
+            </Link>}
+            {!isTrainingStaff && <Link to="/items/new" className="block h-full">
+              <Card className="h-full transition-colors active:bg-muted">
+                <CardContent className="flex min-h-24 flex-col items-center justify-center gap-2 p-3 text-center">
+                  <PackagePlus className="size-5" />
+                  <span className="text-xs font-medium">Add Item</span>
+                </CardContent>
+              </Card>
+            </Link>}
+            {isTrainingStaff && <Link to="/programs/new" className="block h-full">
+              <Card className="h-full transition-colors active:bg-muted">
+                <CardContent className="flex min-h-24 flex-col items-center justify-center gap-2 p-3 text-center">
+                  <GraduationCap className="size-5" />
+                  <span className="text-xs font-medium">Add Program</span>
+                </CardContent>
+              </Card>
+            </Link>}
+            <Link to="/scan" className="block h-full">
+              <Card className="h-full transition-colors active:bg-muted">
+                <CardContent className="flex min-h-24 flex-col items-center justify-center gap-2 p-3 text-center">
+                  <QrCode className="size-5" />
+                  <span className="text-xs font-medium">Scan QR</span>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </div>
 
         {/* Recent Activity - Desktop Table */}
-        <Card className="hidden md:block">
+        {!isTrainingStaff && <Card className="hidden md:block">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
             <CardDescription>Latest system activity and changes</CardDescription>
@@ -353,10 +439,10 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">No recent activity</p>
             </CardContent>
           )}
-        </Card>
+        </Card>}
 
         {/* Recent Activity - Mobile Cards */}
-        <div className="md:hidden">
+        {!isInventoryStaff && !isTrainingStaff && <div className="md:hidden">
           <div className="mb-3 flex items-center justify-between">
             <h3>Recent Activity</h3>
             <Link to="/lendings">
@@ -394,10 +480,10 @@ export default function DashboardPage() {
               </Card>
             )}
           </div>
-        </div>
+        </div>}
 
         {/* Analytics Section */}
-        {analyticsData.length > 0 ? (
+        {!isInventoryStaff && !isTrainingStaff && (analyticsData.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {analyticsData.map((category) => (
               <Card key={category.category}>
@@ -434,7 +520,7 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground mt-2">Analytics will appear as you add trainees, items, and programs</p>
             </CardContent>
           </Card>
-        )}
+        ))}
       </div>
     </DashboardLayout>
   );

@@ -88,10 +88,12 @@ const NAVIGATION_ARRAYS = {
   ] as NavItem[],
   trainee: [
     { name: 'Dashboard', href: '/trainee/dashboard', icon: LayoutDashboard },
-    { name: 'Attendance', href: '/trainee/attendance', icon: Calendar },
+    // Attendance is now in the program details modal
+    // { name: 'Attendance', href: '/trainee/attendance', icon: Calendar },
     { name: 'Profile', href: '/trainee/profile', icon: User },
     { name: 'Programs', href: '/trainee/programs', icon: GraduationCap },
     { name: 'Applications', href: '/trainee/applications', icon: ClipboardList },
+    { name: 'Scan QR', href: '/scan', icon: QrCode },
   ] as NavItem[],
   superAdmin: [
     { name: 'Dashboard', href: '/super-admin', icon: ActivityIcon },
@@ -256,7 +258,7 @@ UserProfileSection.displayName = 'UserProfileSection';
 export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout, hasPermission } = useAuth();
+  const { user, logout, hasPermission, isAuthReady } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const [cmsSettings, setCmsSettings] = useState<any>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -351,8 +353,31 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
     }
   }, [user?.role, hasPermission]);
 
+  const mobileNavigation = useMemo(() => {
+    if (user?.role === 'trainee' || !hasPermission('canScanQR')) {
+      return filteredNavigation;
+    }
+
+    const scanItem = { name: 'Scan QR', href: '/scan', icon: QrCode };
+    const borrowingIndex = filteredNavigation.findIndex((item) => item.href === '/lendings');
+    if (borrowingIndex === -1) {
+      return [...filteredNavigation, scanItem];
+    }
+
+    return [
+      ...filteredNavigation.slice(0, borrowingIndex + 1),
+      scanItem,
+      ...filteredNavigation.slice(borrowingIndex + 1),
+    ];
+  }, [filteredNavigation, hasPermission, user?.role]);
+
+  const mobileMenuItems = useMemo(
+    () => mobileNavigation.flatMap((item) => item.children || [item]),
+    [mobileNavigation]
+  );
+
   return (
-    <div className="min-h-screen bg-background ds-shell">
+    <div className="min-h-screen overflow-x-hidden bg-background ds-shell">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="ds-sidebar flex grow flex-col gap-y-5 overflow-y-auto border-r border-border bg-card px-6 pb-4">
@@ -387,24 +412,18 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card shadow-lg transition-transform duration-300 ease-out ${
+      <nav className={`${!isAuthReady ? 'hidden' : 'md:hidden fixed'} bottom-0 left-0 right-0 z-50 border-t border-border bg-card shadow-lg transition-transform duration-300 ease-out ${
         showBottomNav ? 'translate-y-0' : 'translate-y-full'
       }`}>
-        <div className="grid grid-cols-5 items-stretch h-16">
-          {/* Show first 4 items to make room for More button */}
-          {filteredNavigation.slice(0, 4).map((item) => {
+        <div className="flex h-16 w-full items-stretch">
+          {mobileMenuItems.slice(0, 5).map((item) => {
             const isCurrentActive = item.href && isActive(item.href);
-            
-            // Skip items with children in the main nav
-            if (item.children) {
-              return null;
-            }
             
             return (
               <Link
                 key={item.name}
                 to={item.href || '#'}
-                className={`flex flex-col items-center justify-center px-1 py-2 text-[10px] gap-1 transition-colors ${
+                className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] transition-colors ${
                   isCurrentActive
                     ? 'text-primary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -414,51 +433,24 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
                 <span className="line-clamp-1 text-center">{item.name}</span>
               </Link>
             );
-          }).filter(Boolean)}
+          })}
 
-          {/* More Menu for remaining items */}
-          {filteredNavigation.length > 4 && (
+          {mobileMenuItems.length > 5 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex flex-col items-center justify-center px-1 py-2 text-[10px] gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <button className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] text-muted-foreground transition-colors hover:text-foreground">
                   <Settings className="size-5" />
                   <span>More</span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="top" className="w-48 mb-2">
-                {filteredNavigation.slice(4).map((item) => (
-                  <div key={item.name}>
-                    {item.children ? (
-                      // Settings menu with children
-                      <div>
-                        <div className="flex items-center gap-2 px-2 py-2 text-sm font-medium text-muted-foreground">
-                          <item.icon className="size-4" />
-                          {item.name}
-                        </div>
-                        {item.children.map((child) => (
-                          <DropdownMenuItem key={child.name} asChild>
-                            <Link
-                              to={child.href || '#'}
-                              className="flex items-center gap-2 cursor-pointer ml-4"
-                            >
-                              {child.icon && <child.icon className="size-4" />}
-                              {child.name}
-                            </Link>
-                          </DropdownMenuItem>
-                        ))}
-                      </div>
-                    ) : (
-                      <DropdownMenuItem asChild>
-                        <Link
-                          to={item.href || '#'}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <item.icon className="size-4" />
-                          {item.name}
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                  </div>
+              <DropdownMenuContent align="end" side="top" className="mb-2 w-56">
+                {mobileMenuItems.slice(5).map((item) => (
+                  <DropdownMenuItem key={item.name} asChild>
+                    <Link to={item.href || '#'} className="flex cursor-pointer items-center gap-2">
+                      <item.icon className="size-4" />
+                      {item.name}
+                    </Link>
+                  </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -469,12 +461,12 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       {/* Main Content */}
       <div className="lg:pl-64">
         {/* Top Bar - Height: h-16 (64px), z-index: z-30 */}
-        <div className="ds-topbar sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-card px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1 items-center">
-              {title && <h1 className="text-foreground">{title}</h1>}
+        <div className="ds-topbar sticky top-0 z-30 flex h-16 min-w-0 shrink-0 items-center gap-x-3 border-b border-border bg-card px-3 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 flex-1 gap-x-3 self-stretch lg:gap-x-6">
+            <div className="flex min-w-0 flex-1 items-center">
+              {title && <h1 className="truncate text-foreground">{title}</h1>}
             </div>
-            <div className="flex items-center gap-x-2 lg:gap-x-6">
+            <div className="flex shrink-0 items-center gap-x-1.5 sm:gap-x-2 lg:gap-x-6">
               {/* Tenant name badge — desktop only */}
               {user?.tenantName && (
                 <span className="hidden lg:inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs text-primary font-medium">
@@ -545,8 +537,8 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         </div>
 
         {/* Page Content */}
-        <main className="pb-20 md:pb-8 transition-all duration-300">
-          <div className="ds-page px-4 py-6 sm:px-6 lg:px-8">
+        <main className="min-w-0 pb-20 transition-all duration-300 md:pb-8">
+          <div className="ds-page px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
             {children}
           </div>
         </main>

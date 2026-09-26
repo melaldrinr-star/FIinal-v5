@@ -22,6 +22,8 @@ import CertificateViewer from '../components/CertificateViewer';
 import certificateService, { Certificate } from '../services/certificateService';
 import EnrollmentManagementSection from '../components/EnrollmentManagementSection';
 import { RequirementDropZone } from '../components/RequirementDropZone';
+import { useRequirementDefinitions } from '../hooks/useRequirementDefinitions';
+import type { RequirementDefinition } from '../types/requirementDefinition';
 
 const steps = [
   { id: 1, name: 'Personal Info', description: 'Basic information', icon: User },
@@ -127,15 +129,12 @@ export default function TraineeFormPage() {
   const [loadingCertificates, setLoadingCertificates] = useState(false);
   const [uploadCertModalOpen, setUploadCertModalOpen] = useState(false);
 
-  const [requirementFiles, setRequirementFiles] = useState<Record<string, File | FileMetadata | null>>({
-    accomplished_learners_profile_form: null,
-    birth_certificate_copy: null,
-    marriage_certificate_copy: null,
-    id_pictures: null,
-    valid_id_copy: null,
-    report_card_tor_copy: null,
-    barangay_no_grade_certification: null,
-  });
+  const [requirementFiles, setRequirementFiles] = useState<Record<string, File | FileMetadata | null>>({});
+  const {
+    data: requirementDefinitions,
+    isLoading: loadingRequirements,
+    isError: requirementsError,
+  } = useRequirementDefinitions({ isActive: true, limit: 100 });
 
   // Track which files were deleted during edit (for marking them as deleted in DB on save)
   const [deletedRequirementFiles, setDeletedRequirementFiles] = useState<Set<string>>(new Set());
@@ -331,23 +330,11 @@ export default function TraineeFormPage() {
             
             // api.get() returns response.data directly, so filesResponse = { success, files }
             if (filesResponse && filesResponse.files && Array.isArray(filesResponse.files)) {
-              const filesMap: Record<string, FileMetadata | null> = {
-                accomplished_learners_profile_form: null,
-                birth_certificate_copy: null,
-                marriage_certificate_copy: null,
-                id_pictures: null,
-                valid_id_copy: null,
-                report_card_tor_copy: null,
-                barangay_no_grade_certification: null,
-              };
+              const filesMap: Record<string, FileMetadata | null> = {};
 
               filesResponse.files.forEach((file: FileMetadata) => {
-                console.log('[DEBUG FILE MAPPING]', file.requirement_type, ':', file.file_name);
-                if (file.requirement_type && filesMap.hasOwnProperty(file.requirement_type)) {
+                if (file.requirement_type) {
                   filesMap[file.requirement_type] = file;
-                  console.log('[DEBUG MAPPED]', file.requirement_type, '✓');
-                } else {
-                  console.warn('[DEBUG SKIP]', file.requirement_type, 'not found in filesMap');
                 }
               });
 
@@ -522,7 +509,7 @@ export default function TraineeFormPage() {
         }
 
         const validEmploymentStatuses = ['Employed', 'Unemployed', 'Self-employed', 'Student'];
-        if (!formData.employmentStatus || formData.employmentStatus === '' || !validEmploymentStatuses.includes(formData.employmentStatus)) {
+        if (!formData.employmentStatus || formData.employmentStatus.trim() === '') {
           errors.employmentStatus = 'Employment status is required';
         }
         break;
@@ -530,14 +517,9 @@ export default function TraineeFormPage() {
       case 5: // Requirements
         // Check if all required files are uploaded for existing trainees
         if (id) {
-          const requiredFiles = [
-            'accomplished_learners_profile_form',
-            'birth_certificate_copy',
-            'id_pictures',
-            'valid_id_copy',
-            'report_card_tor_copy',
-            'barangay_no_grade_certification',
-          ];
+          const requiredFiles = requirementDefinitions
+            .filter((requirement) => requirement.is_mandatory)
+            .map((requirement) => requirement.requirement_type);
 
           for (const fileKey of requiredFiles) {
             const file = requirementFiles[fileKey as keyof typeof requirementFiles];
@@ -666,16 +648,6 @@ export default function TraineeFormPage() {
 
 
   const uploadRequirementFiles = async (traineeId: string): Promise<void> => {
-    const fileKeys = [
-      'accomplished_learners_profile_form',
-      'birth_certificate_copy',
-      'marriage_certificate_copy',
-      'id_pictures',
-      'valid_id_copy',
-      'report_card_tor_copy',
-      'barangay_no_grade_certification',
-    ];
-
     // First, delete files that were marked for deletion
     for (const key of deletedRequirementFiles) {
       try {
@@ -688,7 +660,7 @@ export default function TraineeFormPage() {
     }
     setDeletedRequirementFiles(new Set());
 
-    for (const key of fileKeys) {
+    for (const key of requirementDefinitions.map((requirement) => requirement.requirement_type)) {
       const file = requirementFiles[key as keyof typeof requirementFiles];
       // Only upload if it's a File object (new upload), not FileMetadata (existing file)
       if (file instanceof File) {
@@ -1383,17 +1355,14 @@ export default function TraineeFormPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="employmentStatus">Employment Status *</Label>
-                  <Select value={formData.employmentStatus || ''} onValueChange={(value: string) => handleInputChange('employmentStatus', value)}>
-                    <SelectTrigger className={validationErrors.employmentStatus ? 'border-red-500' : ''}>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Employed">Employed</SelectItem>
-                      <SelectItem value="Self-employed">Self-employed</SelectItem>
-                      <SelectItem value="Unemployed">Unemployed</SelectItem>
-                      <SelectItem value="Student">Student</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="employmentStatus"
+                    name="employmentStatus"
+                    value={formData.employmentStatus || ''}
+                    onChange={(e) => handleInputChange('employmentStatus', e.target.value)}
+                    placeholder="e.g., Employed, Self-employed, Unemployed, Student"
+                    className={validationErrors.employmentStatus ? 'border-red-500' : ''}
+                  />
                   {validationErrors.employmentStatus && (
                     <p className="text-sm text-red-500">{validationErrors.employmentStatus}</p>
                   )}
@@ -1425,189 +1394,40 @@ export default function TraineeFormPage() {
                   </Alert>
                 )}
 
-                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-                  {/* Accomplished Learner's Profile Form */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="Accomplished Learner's Profile Form"
-                      description="A reflective form documenting your learning journey"
-                      isRequired={true}
-                      file={requirementFiles.accomplished_learners_profile_form}
-                      requirementType="accomplished_learners_profile_form"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          accomplished_learners_profile_form: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.accomplished_learners_profile_form !== null) {
-                          const current = requirementFiles.accomplished_learners_profile_form;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('accomplished_learners_profile_form'));
-                          }
-                        }
-                      }}
-                    />
+                {loadingRequirements ? (
+                  <p className="text-sm text-muted-foreground">Loading requirements...</p>
+                ) : requirementsError ? (
+                  <p className="text-sm text-destructive">Failed to load active requirements.</p>
+                ) : requirementDefinitions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No active requirements are configured for this organization.</p>
+                ) : (
+                  <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                    {requirementDefinitions.map((requirement: RequirementDefinition) => {
+                      const currentFile = requirementFiles[requirement.requirement_type] || null;
+                      return (
+                        <div key={requirement.id} className="md:col-span-1">
+                          <RequirementDropZone
+                            title={requirement.display_name}
+                            description={requirement.description}
+                            isRequired={requirement.is_mandatory}
+                            file={currentFile}
+                            requirementType={requirement.requirement_type}
+                            traineeId={id}
+                            onFileChange={(file) => {
+                              setRequirementFiles((previous) => ({
+                                ...previous,
+                                [requirement.requirement_type]: file,
+                              }));
+                              if (file === null && currentFile && 'file_name' in currentFile) {
+                                setDeletedRequirementFiles((previous) => new Set(previous).add(requirement.requirement_type));
+                              }
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
-
-                  {/* Photocopy of Birth Certificate (NSO/PSA) */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="Photocopy of Birth Certificate (NSO/PSA)"
-                      description="Official photocopy from NSO or PSA"
-                      isRequired={true}
-                      file={requirementFiles.birth_certificate_copy}
-                      requirementType="birth_certificate_copy"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          birth_certificate_copy: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.birth_certificate_copy !== null) {
-                          const current = requirementFiles.birth_certificate_copy;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('birth_certificate_copy'));
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Photocopy of Marriage Certificate (PSA/NSO) */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="Photocopy of Marriage Certificate (PSA/NSO)"
-                      description="For married female trainees only"
-                      isRequired={false}
-                      file={requirementFiles.marriage_certificate_copy}
-                      requirementType="marriage_certificate_copy"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          marriage_certificate_copy: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.marriage_certificate_copy !== null) {
-                          const current = requirementFiles.marriage_certificate_copy;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('marriage_certificate_copy'));
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* 3 pcs 1x1 ID Picture (in white background) */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="3 pcs 1x1 ID Picture (in white background)"
-                      description="3 pieces of 1x1 ID pictures with white background"
-                      isRequired={true}
-                      file={requirementFiles.id_pictures}
-                      requirementType="id_pictures"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          id_pictures: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.id_pictures !== null) {
-                          const current = requirementFiles.id_pictures;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('id_pictures'));
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Photocopy of Valid ID */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="Photocopy of Valid ID"
-                      description="Government-issued ID (passport, driver's license, etc.)"
-                      isRequired={true}
-                      file={requirementFiles.valid_id_copy}
-                      requirementType="valid_id_copy"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          valid_id_copy: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.valid_id_copy !== null) {
-                          const current = requirementFiles.valid_id_copy;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('valid_id_copy'));
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Certified True Copy of Report Card/TOR */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="Certified True Copy of Report Card/TOR"
-                      description="Certified true copy of report card or transcript of records"
-                      isRequired={true}
-                      file={requirementFiles.report_card_tor_copy}
-                      requirementType="report_card_tor_copy"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          report_card_tor_copy: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.report_card_tor_copy !== null) {
-                          const current = requirementFiles.report_card_tor_copy;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('report_card_tor_copy'));
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-
-                  {/* Certification of No Grade Completed from barangay */}
-                  <div className="md:col-span-1">
-                    <RequirementDropZone
-                      title="Certification of No Grade Completed from barangay"
-                      description="Barangay certification stating no grade has been completed"
-                      isRequired={true}
-                      file={requirementFiles.barangay_no_grade_certification}
-                      requirementType="barangay_no_grade_certification"
-                      traineeId={id}
-                      onFileChange={(file) => {
-                        setRequirementFiles(prev => ({
-                          ...prev,
-                          barangay_no_grade_certification: file,
-                        }));
-                        // Track if we're deleting an existing file
-                        if (file === null && requirementFiles.barangay_no_grade_certification !== null) {
-                          const current = requirementFiles.barangay_no_grade_certification;
-                          const isFileMetadata = current && typeof current === 'object' && 'file_name' in current;
-                          if (isFileMetadata) {
-                            setDeletedRequirementFiles(prev => new Set(prev).add('barangay_no_grade_certification'));
-                          }
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -1991,42 +1811,13 @@ export default function TraineeFormPage() {
 
         {/* Navigation Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pb-20 sm:pb-4">
-          {/* Mobile: Next at top, Previous and Cancel below */}
-          {/* Desktop: Cancel/Previous on left, Step indicator center, Next/Save on right */}
-          
-          {currentStep < steps.length ? (
-            <Button type="button" onClick={nextStep} className="w-full sm:w-auto text-xs sm:text-sm order-1 sm:order-3">
-              Next
-              <ChevronRight className="ml-1.5 sm:ml-2 size-3.5 sm:size-4" />
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading || isVerifying}
-              className="w-full sm:w-auto text-xs sm:text-sm order-1 sm:order-3"
-            >
-              {loading || isVerifying ? (
-                <span className="flex items-center gap-2">
-                  <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  {loading
-                    ? id ? 'Updating...' : 'Saving...'
-                    : 'Verifying...'}
-                </span>
-              ) : (
-                <>
-                  <Save className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
-                  {id ? 'Update Trainee' : 'Save Trainee'}
-                </>
-              )}
-            </Button>
-          )}
-
-          <div className="text-xs sm:text-sm text-muted-foreground text-center order-2 sm:order-2">
+          {/* Left: Step Indicator */}
+          <div className="text-xs sm:text-sm text-muted-foreground text-center order-2 sm:order-1">
             Step {currentStep} of {steps.length}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2 order-3 sm:order-1">
+          {/* Right: Previous, Next/Save, Cancel */}
+          <div className="flex gap-2 order-1 sm:order-2">
             <Button
               variant="outline"
               onClick={prevStep}
@@ -2036,6 +1827,33 @@ export default function TraineeFormPage() {
               <ChevronLeft className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
               Previous
             </Button>
+            
+            {currentStep < steps.length ? (
+              <Button type="button" onClick={nextStep} className="w-full sm:w-auto text-xs sm:text-sm">
+                Next
+                <ChevronRight className="ml-1.5 sm:ml-2 size-3.5 sm:size-4" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading || isVerifying}
+                className="w-full sm:w-auto text-xs sm:text-sm"
+              >
+                {loading || isVerifying ? (
+                  <span className="flex items-center gap-2">
+                    <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    {loading ? (id ? 'Updating...' : 'Saving...') : 'Verifying...'}
+                  </span>
+                ) : (
+                  <>
+                    <Save className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
+                    {id ? 'Update Trainee' : 'Save Trainee'}
+                  </>
+                )}
+              </Button>
+            )}
+
             <Button
               variant="outline"
               onClick={() => navigate('/trainees')}

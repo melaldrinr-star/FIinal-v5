@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireTenantContext } from '@/middleware/tenantContext';
 import { logger } from '@/utils/logger';
-import { deleteRequirementFile, REQUIREMENT_TYPES } from '@/services/trainingRequirementService';
+import { deleteRequirementFile } from '@/services/trainingRequirementService';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function DELETE(
@@ -15,7 +15,7 @@ export async function DELETE(
 
     const { id: traineeId, type: requirementType } = await params;
 
-    if (!requirementType || !REQUIREMENT_TYPES.includes(requirementType as any)) {
+    if (!requirementType) {
       return NextResponse.json({ error: 'Invalid requirement type' }, { status: 400 });
     }
 

@@ -106,24 +106,24 @@ export default function NonAttendanceDatesPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="flex items-center gap-2">
-              <Calendar className="size-8" />
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="flex items-start gap-2 text-2xl leading-tight sm:text-3xl">
+              <Calendar className="mt-1 size-6 shrink-0 sm:size-8" />
               Non-Attendance Dates
             </h1>
-            <p className="text-muted-foreground">
+            <p className="mt-1 max-w-xl text-sm text-muted-foreground sm:text-base">
               Manage dates excluded from attendance (holidays, weekends, etc.)
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowGenerateModal(true)} variant="outline">
+          <div className="grid w-full grid-cols-1 gap-2 sm:flex sm:w-auto">
+            <Button onClick={() => setShowGenerateModal(true)} variant="outline" className="w-full sm:w-auto">
               <Calendar className="mr-2 size-4" />
               Generate Weekends
             </Button>
-            <Button onClick={() => setShowAddModal(true)}>
+            <Button onClick={() => setShowAddModal(true)} className="w-full sm:w-auto">
               <Plus className="mr-2 size-4" />
               Add Date
             </Button>
@@ -132,9 +132,9 @@ export default function NonAttendanceDatesPage() {
 
         {/* Info Alert */}
         <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="flex gap-3 pt-6">
-            <AlertCircle className="size-5 text-blue-600 shrink-0 mt-0.5" />
-            <div className="text-sm text-blue-900">
+          <CardContent className="flex gap-3 p-4 sm:pt-6">
+            <AlertCircle className="mt-0.5 size-5 shrink-0 text-blue-600" />
+            <div className="min-w-0 text-sm text-blue-900">
               <p className="font-medium mb-1">How it works:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>Excluded dates won't be counted in attendance calculations</li>
@@ -151,7 +151,7 @@ export default function NonAttendanceDatesPage() {
           <ListSkeleton rows={6} />
         ) : dates.length === 0 ? (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
+            <CardContent className="px-4 py-8 text-center text-sm text-muted-foreground">
               No excluded dates configured. Click "Add Date" or "Generate Weekends" to start.
             </CardContent>
           </Card>
@@ -170,9 +170,9 @@ export default function NonAttendanceDatesPage() {
                       .map(date => (
                         <div 
                           key={date.id}
-                          className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border hover:bg-muted/50 transition-colors"
+                          className="flex items-start justify-between gap-3 rounded-lg border bg-muted/30 p-3 transition-colors hover:bg-muted/50"
                         >
-                          <div className="flex-1">
+                          <div className="min-w-0 flex-1">
                             <div className="font-medium">{formatDate(date.date)}</div>
                             <div className="text-sm text-muted-foreground">{date.reason}</div>
                             {date.description && (
@@ -183,7 +183,7 @@ export default function NonAttendanceDatesPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDelete(date.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            className="shrink-0 text-red-600 hover:bg-red-50 hover:text-red-700"
                           >
                             <Trash2 className="size-4" />
                           </Button>
@@ -236,11 +236,11 @@ export default function NonAttendanceDatesPage() {
                   rows={3}
                 />
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setShowAddModal(false)}>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Add Date</Button>
+                <Button type="submit" className="w-full sm:w-auto">Add Date</Button>
               </div>
             </form>
           </DialogContent>
@@ -270,11 +270,11 @@ export default function NonAttendanceDatesPage() {
                   This will create approximately 104 excluded dates (52 Saturdays + 52 Sundays)
                 </p>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowGenerateModal(false)}>
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowGenerateModal(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleGenerateWeekends}>
+                <Button onClick={handleGenerateWeekends} className="w-full sm:w-auto">
                   Generate Weekends
                 </Button>
               </div>

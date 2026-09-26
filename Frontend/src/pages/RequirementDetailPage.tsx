@@ -28,22 +28,14 @@
  */
 
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
 import { RequirementDefinitionDetail } from '../components/requirements/RequirementDefinitionDetail';
-import { RequirementSubmissionList } from '../components/RequirementSubmissionList';
 import { RequirementDefinitionForm } from '../components/RequirementDefinitionForm';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Alert, AlertDescription } from '../components/ui/alert';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
 import { useAuth } from '../contexts/AuthContext';
 import {
   AlertTriangle,
@@ -105,14 +97,18 @@ function RequirementDetailBreadcrumb({ requirementName }: { requirementName?: st
  */
 export default function RequirementDetailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const { user, hasPermission } = useAuth();
-  const [showSubmissions, setShowSubmissions] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   
-  // Determine the mode: 'new' (create), 'edit' (edit existing), or 'view' (view existing)
-  const mode = id === 'new' ? 'new' : id?.includes('edit') ? 'edit' : 'view';
-  const requirementId = id === 'new' || id?.includes('edit') ? undefined : id;
+  // The dedicated /new route has no id parameter, so an absent id is create mode.
+  const mode = !id || id === 'new'
+    ? 'new'
+    : location.pathname.endsWith('/edit')
+      ? 'edit'
+      : 'view';
+  const requirementId = mode === 'new' ? undefined : id;
   
   const { data: requirement, isLoading, isError, error } = useRequirementDefinition(requirementId || '');
   const { mutateAsync: updateRequirement } = useUpdateRequirementDefinition();
@@ -127,7 +123,6 @@ export default function RequirementDetailPage() {
     });
   }, [user, requirementId, mode]);
 
-  // Validate ID parameter for view/edit modes
   if ((mode === 'view' || mode === 'edit') && !id) {
     return (
       <DashboardLayout>
@@ -147,7 +142,6 @@ export default function RequirementDetailPage() {
     );
   }
 
-  // Access control: Only local_admin and super_admin can access this page
   if (!user) {
     return (
       <DashboardLayout>
@@ -164,7 +158,7 @@ export default function RequirementDetailPage() {
     );
   }
 
-  const canManageRequirements = user?.role === 'local_admin' || user?.role === 'super_admin';
+  const canManageRequirements = user.role === 'local_admin' || user.role === 'super_admin';
 
   if (!canManageRequirements) {
     return (
@@ -209,10 +203,6 @@ export default function RequirementDetailPage() {
       logger.error('Failed to delete requirement', { error: err });
       throw err;
     }
-  };
-
-  const handleViewSubmissions = (submissionId: string) => {
-    setShowSubmissions(true);
   };
 
   const handleFormSuccess = () => {
@@ -300,31 +290,16 @@ export default function RequirementDetailPage() {
               )}
 
               {/* Main Content: Requirement Definition Detail */}
-              {!isLoading && !isError && requirement && (
+              {!isLoading && !isError && (
                 <div className="space-y-6">
                   <ErrorBoundary>
                     <RequirementDefinitionDetail
                       requirementId={requirementId!}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
-                      onViewSubmissions={handleViewSubmissions}
                     />
                   </ErrorBoundary>
 
-                  {/* Submissions Dialog */}
-                  <Dialog open={showSubmissions} onOpenChange={setShowSubmissions}>
-                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Trainee Submissions</DialogTitle>
-                        <DialogDescription>
-                          List of all trainee submissions for this requirement
-                        </DialogDescription>
-                      </DialogHeader>
-                      <ErrorBoundary>
-                        <RequirementSubmissionList requirementId={requirementId!} />
-                      </ErrorBoundary>
-                    </DialogContent>
-                  </Dialog>
                 </div>
               )}
             </>

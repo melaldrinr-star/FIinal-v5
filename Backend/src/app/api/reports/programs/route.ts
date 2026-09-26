@@ -31,8 +31,9 @@ const { searchParams } = new URL(request.url);
   const statusFilter = searchParams.get('status') || undefined;
   const targetTenantId = isSuperAdmin  ? (searchParams.get('tenant_id') || tenantId)  : tenantId;  let programsQuery = supabaseAdmin  .from('programs')  .select('id, name, status, max_trainees, start_date, end_date, created_at')  .eq('tenant_id', targetTenantId);
   if (statusFilter) programsQuery = programsQuery.eq('status', statusFilter);
-  if (startDate)  programsQuery = programsQuery.gte('start_date', startDate);
-  if (endDate)  programsQuery = programsQuery.lte('start_date', endDate);
+  // Include programs active at any point in the selected period.
+  if (endDate) programsQuery = programsQuery.lte('start_date', endDate);
+  if (startDate) programsQuery = programsQuery.gte('end_date', startDate);
 
   const { data: programs, error: programsError } = await programsQuery.order('start_date', { ascending: false });
   if (programsError) throw programsError;
@@ -41,11 +42,11 @@ const { searchParams } = new URL(request.url);
   const programIds = programRows.map((program) => program.id);
   
   // Query enrollments (not trainees) to get enrollment data per program
-  let enrollmentRows: Array<{ program_id: string; status: string; enrollment_date: string }> = [];
+  let enrollmentRows: Array<{ program_id: string; trainee_id: string; status: string; enrollment_date: string }> = [];
   if (programIds.length > 0) {
     let enrollmentsQuery = supabaseAdmin
       .from('enrollments')
-      .select('program_id, status, enrollment_date')
+      .select('program_id, trainee_id, status, enrollment_date')
       .eq('tenant_id', targetTenantId)
       .in('program_id', programIds);
     if (startDate) enrollmentsQuery = enrollmentsQuery.gte('enrollment_date', startDate);
@@ -54,6 +55,23 @@ const { searchParams } = new URL(request.url);
     const { data, error } = await enrollmentsQuery;
     if (error) throw error;
     enrollmentRows = data || [];
+  }
+
+  const traineeIds = [...new Set(enrollmentRows.map((enrollment) => enrollment.trainee_id).filter(Boolean))];
+  const traineesById = new Map<string, string>();
+  if (traineeIds.length > 0) {
+    const { data: trainees, error: traineesError } = await supabaseAdmin
+      .from('trainees')
+      .select('id, first_name, last_name, email')
+      .eq('tenant_id', targetTenantId)
+      .is('deleted_at', null)
+      .in('id', traineeIds);
+    if (traineesError) throw traineesError;
+
+    for (const trainee of trainees || []) {
+      const name = [trainee.first_name, trainee.last_name].filter(Boolean).join(' ').trim();
+      traineesById.set(trainee.id, name || trainee.email || 'Unnamed trainee');
+    }
   }
 
   const enrolledByProgram: Record<string, number> = {};
@@ -108,6 +126,10 @@ const { searchParams } = new URL(request.url);
       capacity: program.max_trainees || 0,
       start_date: program.start_date,
       end_date: program.end_date,
+      students: enrollmentRows
+        .filter((enrollment) => enrollment.program_id === program.id)
+        .map((enrollment) => traineesById.get(enrollment.trainee_id))
+        .filter((name): name is string => Boolean(name)),
     };
   });
 

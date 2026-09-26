@@ -22,61 +22,99 @@ export async function calculateSubmissionStats(
   requirementId: string,
   tenantId: string
 ): Promise<SubmissionStats> {
-  // Query enrollment_requirements table to get submission counts
-  // For now, since the table might not exist yet, we'll return zero stats
-  // In a production implementation, this would query the actual table
+  const { data: definition, error: definitionError } = await supabaseAdmin
+    .from('requirement_definitions')
+    .select('requirement_type')
+    .eq('id', requirementId)
+    .eq('tenant_id', tenantId)
+    .is('deleted_at', null)
+    .single();
 
-  // Once enrollment_requirements table exists (Task 13), this query will be:
-  /*
-  const { data, error } = await supabaseAdmin
+  if (definitionError) {
+    throw definitionError;
+  }
+
+  const { data: enrollmentRequirements, error: enrollmentError } = await supabaseAdmin
     .from('enrollment_requirements')
-    .select('submission_status', { count: 'exact' })
+    .select('submission_status,enrollment_id')
     .eq('requirement_id', requirementId)
     .eq('tenant_id', tenantId)
     .eq('is_applicable', true);
 
-  if (error) throw error;
+  if (enrollmentError) {
+    throw enrollmentError;
+  }
 
-  const stats = {
-    total_trainees: 0,
-    pending_count: 0,
-    submitted_count: 0,
-    verified_count: 0,
-    rejected_count: 0,
-    waived_count: 0,
-  };
+  const enrollmentIds = (enrollmentRequirements || [])
+    .map((item: { enrollment_id?: string }) => item.enrollment_id)
+    .filter((enrollmentId): enrollmentId is string => Boolean(enrollmentId));
 
-  data?.forEach((item: any) => {
-    stats.total_trainees++;
-    switch (item.submission_status) {
-      case 'pending':
-        stats.pending_count++;
-        break;
-      case 'submitted':
-        stats.submitted_count++;
-        break;
-      case 'verified':
-        stats.verified_count++;
-        break;
-      case 'rejected':
-        stats.rejected_count++;
-        break;
-      case 'waived':
-        stats.waived_count++;
-        break;
+  const traineeByEnrollment = new Map<string, string>();
+  if (enrollmentIds.length > 0) {
+    const { data: enrollments, error: enrollmentsError } = await supabaseAdmin
+      .from('enrollments')
+      .select('id,trainee_id')
+      .in('id', enrollmentIds)
+      .eq('tenant_id', tenantId);
+
+    if (enrollmentsError) {
+      throw enrollmentsError;
+    }
+
+    (enrollments || []).forEach((enrollment: { id: string; trainee_id: string }) => {
+      traineeByEnrollment.set(enrollment.id, enrollment.trainee_id);
+    });
+  }
+
+  const statusByTrainee = new Map<string, string>();
+  (enrollmentRequirements || []).forEach(
+    (item: { submission_status: string; enrollment_id?: string }, index: number) => {
+      const traineeKey = item.enrollment_id
+        ? traineeByEnrollment.get(item.enrollment_id) || `enrollment:${item.enrollment_id}`
+        : `enrollment:${index}`;
+      statusByTrainee.set(traineeKey, item.submission_status);
+    }
+  );
+
+  const { data: uploadedFiles, error: filesError } = await supabaseAdmin
+    .from('training_requirement_files')
+    .select('trainee_id')
+    .eq('tenant_id', tenantId)
+    .eq('requirement_type', definition.requirement_type)
+    .is('deleted_at', null);
+
+  if (filesError) {
+    throw filesError;
+  }
+
+  // A real upload means the trainee has submitted the requirement. Preserve
+  // verified, rejected, and waived decisions made by staff.
+  (uploadedFiles || []).forEach((file: { trainee_id?: string }) => {
+    if (!file.trainee_id) return;
+    const currentStatus = statusByTrainee.get(file.trainee_id);
+    if (!currentStatus || currentStatus === 'pending') {
+      statusByTrainee.set(file.trainee_id, 'submitted');
     }
   });
-  */
 
-  // For now, return empty stats as enrollment_requirements doesn't exist yet
   const stats = {
-    total_trainees: 0,
+    total_trainees: statusByTrainee.size,
     pending_count: 0,
     submitted_count: 0,
     verified_count: 0,
     rejected_count: 0,
     waived_count: 0,
   };
+
+  statusByTrainee.forEach((status) => {
+    switch (status) {
+      case 'pending': stats.pending_count++; break;
+      case 'submitted': stats.submitted_count++; break;
+      case 'verified': stats.verified_count++; break;
+      case 'rejected': stats.rejected_count++; break;
+      case 'waived': stats.waived_count++; break;
+    }
+  });
 
   const completion_rate =
     stats.total_trainees === 0

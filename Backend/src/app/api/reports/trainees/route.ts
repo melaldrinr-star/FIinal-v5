@@ -39,6 +39,8 @@ const { searchParams } = new URL(request.url);
 
   const programId = searchParams.get('program') || searchParams.get('program_id') || undefined;
   const status = searchParams.get('status') || undefined;
+  const employmentStatus = searchParams.get('employment_status') || undefined;
+  const traineeStatus = searchParams.get('trainee_status') || undefined;
 
   const targetTenantId = isSuperAdmin
     ? searchParams.get('tenant_id') || tenantId
@@ -56,23 +58,42 @@ const { searchParams } = new URL(request.url);
   if (startDate) enrollmentsQuery = enrollmentsQuery.gte('enrollment_date', startDate);
   if (endDate) enrollmentsQuery = enrollmentsQuery.lte('enrollment_date', endDate);
 
+  let traineesQuery = supabaseAdmin
+    .from('trainees')
+    .select('id, first_name, last_name, employment_status, status')
+    .eq('tenant_id', targetTenantId)
+    .is('deleted_at', null);
+
+  if (employmentStatus) traineesQuery = traineesQuery.eq('employment_status', employmentStatus);
+  if (traineeStatus) traineesQuery = traineesQuery.eq('status', traineeStatus);
+
   const [
     { data: enrollments, error: enrollmentsError },
     { data: programs, error: programsError },
+    { data: trainees, error: traineesError },
   ] = await Promise.all([
     enrollmentsQuery.order('enrollment_date', { ascending: true }),
     supabaseAdmin.from('programs').select('id, name').eq('tenant_id', targetTenantId),
+    traineesQuery.order('last_name', { ascending: true }),
   ]);
 
   if (enrollmentsError) throw enrollmentsError;
   if (programsError) throw programsError;
+  if (traineesError) throw traineesError;
 
   const enrollmentRows = enrollments || [];
   const programRows = programs || [];
+  const traineeRows = trainees || [];
 
   const programNameById = new Map(
     programRows.map((p) => [p.id as string, p.name as string])
   );
+  const traineeProgramById = new Map<string, string>();
+  for (const enrollment of enrollmentRows) {
+    if (!traineeProgramById.has(enrollment.trainee_id as string)) {
+      traineeProgramById.set(enrollment.trainee_id as string, enrollment.program_id as string);
+    }
+  }
 
   const byProgram: { [key: string]: number } = {};
   const byStatus: { [key: string]: number } = {};
@@ -103,6 +124,23 @@ const { searchParams } = new URL(request.url);
       ? Number(((completedCount / enrollmentRows.length) * 100).toFixed(2))
       : 0;
 
+  const employmentStatusCounts = traineeRows.reduce((counts: Record<string, number>, trainee: any) => {
+    const employmentStatus = trainee.employment_status || 'Unknown';
+    counts[employmentStatus] = (counts[employmentStatus] || 0) + 1;
+    return counts;
+  }, {});
+
+  const employmentStatusRecords = traineeRows
+    .filter((trainee: any) => !programId || traineeProgramById.has(trainee.id))
+    .map((trainee: any) => ({
+    id: trainee.id,
+    name: `${trainee.first_name || ''} ${trainee.last_name || ''}`.trim(),
+    employmentStatus: trainee.employment_status || 'Unknown',
+    traineeStatus: trainee.status || 'Unknown',
+    programId: traineeProgramById.get(trainee.id) || null,
+    program: programNameById.get(traineeProgramById.get(trainee.id) || '') || 'No program',
+  }));
+
   return successResponse({
     tenantId: targetTenantId,
     totalEnrollments: enrollmentRows.length,
@@ -110,5 +148,7 @@ const { searchParams } = new URL(request.url);
     byStatus,
     enrollmentTrend,
     completionRate,
+    employmentStatusCounts,
+    employmentStatusRecords,
   });
 });

@@ -12,12 +12,9 @@ import reportService from '../services/reportService';
 import logger from '../utils/logger';
 import PrintableReport from '../components/PrintableReport';
 import { useAuth } from '../contexts/AuthContext';
-import PaginationWrapper from '../components/PaginationWrapper';
 import {
   LineChart,
   Line,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -30,32 +27,34 @@ import {
 } from 'recharts';
 
 export default function ReportsPage() {
-  const { isAuthReady, hasPermission } = useAuth();
-  const [dateFrom, setDateFrom] = useState('2024-10-01');
-  const [dateTo, setDateTo] = useState('2024-10-31');
+  const { isAuthReady, hasPermission, user } = useAuth();
+  const isInventoryStaff = user?.role === 'staff_inventory_manager';
+  const isTrainingStaff = user?.role === 'staff_training_coordinator';
+  const isLocalAdmin = user?.role === 'local_admin';
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const [dateFrom, setDateFrom] = useState(`${currentMonth}-01`);
+  const [dateTo, setDateTo] = useState(new Date().toISOString().slice(0, 10));
   const [reportType, setReportType] = useState('all');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [, setLoading] = useState(true);
   const [activityData, setActivityData] = useState<any[]>([]);
   const [categoryData, setCategoryData] = useState<any[]>([]);
   const [programData, setProgramData] = useState<any[]>([]);
-  const [categoryPage, setCategoryPage] = useState(1);
-  const [programPage, setProgramPage] = useState(1);
-  const itemsPerPage = 10;
+  const [employmentStatusRecords, setEmploymentStatusRecords] = useState<Array<{ id: string; name: string; employmentStatus: string; traineeStatus: string; programId: string | null; program: string }>>([]);
+  const [employmentProgramFilter, setEmploymentProgramFilter] = useState('all');
+  const [traineeStatusFilter, setTraineeStatusFilter] = useState('all');
+  const [selectedProgram, setSelectedProgram] = useState('all');
   
   // Print state management
   const [isPrinting, setIsPrinting] = useState(false);
   
   // Summary statistics state
-  // TODO: These should be calculated from actual report data or fetched from backend
-  // @ts-expect-error - Setters will be used when implementing dynamic statistics
-  const [totalLendings, setTotalLendings] = useState(127);
-  // @ts-expect-error - Setters will be used when implementing dynamic statistics
-  const [itemsReturned, setItemsReturned] = useState(98);
-  // @ts-expect-error - Setters will be used when implementing dynamic statistics
-  const [activeLoans, setActiveLoans] = useState(29);
-  // @ts-expect-error - Setters will be used when implementing dynamic statistics
-  const [newTrainees, setNewTrainees] = useState(34);
+  const [totalLendings, setTotalLendings] = useState(0);
+  const [itemsReturned, setItemsReturned] = useState(0);
+  const [activeLoans, setActiveLoans] = useState(0);
+  const [newTrainees, setNewTrainees] = useState(0);
+  const [totalTrainees, setTotalTrainees] = useState(0);
+  const [totalPrograms, setTotalPrograms] = useState(0);
 
   const COLORS = ['#1976D2', '#43A047', '#FBC02D', '#00ACC1'];
 
@@ -66,7 +65,16 @@ export default function ReportsPage() {
     }
 
     fetchReportData();
-  }, [dateFrom, dateTo, reportType, isAuthReady]);
+  }, [dateFrom, dateTo, reportType, isAuthReady, isInventoryStaff, isTrainingStaff, employmentProgramFilter, traineeStatusFilter]);
+
+  useEffect(() => {
+    if (isInventoryStaff && reportType === 'all') {
+      setReportType('items');
+    }
+    if (isTrainingStaff && reportType === 'all') {
+      setReportType('trainees');
+    }
+  }, [isInventoryStaff, isTrainingStaff, reportType]);
 
   const isForbidden = (error: unknown) => {
     const status = (error as any)?.status ?? (error as any)?.response?.status;
@@ -80,9 +88,59 @@ export default function ReportsPage() {
         startDate: dateFrom,
         endDate: dateTo
       };
+      const traineeReportFilters = {
+        ...filters,
+        ...(employmentProgramFilter !== 'all' ? { program_id: employmentProgramFilter } : {}),
+        ...(traineeStatusFilter !== 'all' ? { trainee_status: traineeStatusFilter } : {}),
+      };
+      const employmentReportFilters = {
+        ...(employmentProgramFilter !== 'all' ? { program_id: employmentProgramFilter } : {}),
+        ...(traineeStatusFilter !== 'all' ? { trainee_status: traineeStatusFilter } : {}),
+      };
+
+      if (isTrainingStaff) {
+        try {
+          const traineeResponse = await reportService.getTraineeReport(traineeReportFilters);
+          setNewTrainees(traineeResponse.totalEnrollments || 0);
+        } catch (error) {
+          if (!isForbidden(error)) logger.error('Failed to fetch trainee report', { error });
+          setNewTrainees(0);
+        }
+        setTotalLendings(0);
+        setItemsReturned(0);
+        setActiveLoans(0);
+      } else {
+        try {
+          const dashboardStats = await reportService.getDashboardStats(filters);
+          setTotalLendings(dashboardStats.lending.total);
+          setItemsReturned(dashboardStats.lending.returned);
+          setActiveLoans(dashboardStats.lending.active);
+          setNewTrainees(dashboardStats.trainees.total);
+          setTotalTrainees(dashboardStats.trainees.total);
+          setTotalPrograms(dashboardStats.programs.total);
+        } catch (error) {
+          if (!isForbidden(error)) {
+            logger.error('Failed to fetch dashboard stats', { error });
+          }
+          setTotalTrainees(0);
+          setTotalPrograms(0);
+        }
+      }
+
+      if (isLocalAdmin) {
+        try {
+          const traineeResponse = await reportService.getTraineeReport(employmentReportFilters);
+          setEmploymentStatusRecords(traineeResponse.employmentStatusRecords || []);
+        } catch (error) {
+          if (!isForbidden(error)) logger.error('Failed to fetch employment status report', { error });
+          setEmploymentStatusRecords([]);
+        }
+      } else {
+        setEmploymentStatusRecords([]);
+      }
 
       // Fetch activity analytics (currently not implemented in backend)
-      if (hasPermission('canViewActivityLogs')) {
+      if (!isTrainingStaff && hasPermission('canViewActivityLogs')) {
         try {
           const activityResponse: any = await reportService.getActivityAnalytics(filters);
           if (activityResponse?.trend) {
@@ -91,74 +149,62 @@ export default function ReportsPage() {
               borrowed: item.borrowed || 0,
               returned: item.returned || 0
             })));
+          } else {
+            // If no trend data, use empty array
+            setActivityData([]);
           }
         } catch (error) {
           if (!isForbidden(error)) {
             logger.error('Failed to fetch activity analytics', { error });
           }
-          // Set mock data for demonstration
-          setActivityData([
-            { date: 'Feb 20', borrowed: 5, returned: 3 },
-            { date: 'Feb 21', borrowed: 8, returned: 6 },
-            { date: 'Feb 22', borrowed: 12, returned: 9 },
-            { date: 'Feb 23', borrowed: 7, returned: 11 },
-            { date: 'Feb 24', borrowed: 9, returned: 8 },
-            { date: 'Feb 25', borrowed: 6, returned: 7 }
-          ]);
+          // Use empty array instead of mock data when API fails
+          setActivityData([]);
         }
       } else {
-        // Set mock data for demonstration
-        setActivityData([
-          { date: 'Feb 20', borrowed: 5, returned: 3 },
-          { date: 'Feb 21', borrowed: 8, returned: 6 },
-          { date: 'Feb 22', borrowed: 12, returned: 9 },
-          { date: 'Feb 23', borrowed: 7, returned: 11 },
-          { date: 'Feb 24', borrowed: 9, returned: 8 },
-          { date: 'Feb 25', borrowed: 6, returned: 7 }
-        ]);
+        // Use empty array instead of mock data when no permissions
+        setActivityData([]);
       }
 
-      // Fetch inventory report for category data
-      try {
-        const inventoryResponse = await reportService.getInventoryReport(filters);
-        if (inventoryResponse?.byCategory) {
-          const categoryEntries = Object.entries(inventoryResponse.byCategory);
-          setCategoryData(categoryEntries.map(([name, value]) => ({ name, value })));
+      if (isTrainingStaff) {
+        setCategoryData([]);
+      } else {
+        try {
+          const inventoryResponse = await reportService.getInventoryReport(filters);
+          if (inventoryResponse?.byCategory) {
+            const categoryEntries = Object.entries(inventoryResponse.byCategory);
+            setCategoryData(categoryEntries.map(([name, value]) => ({ name, value })));
+          } else {
+            setCategoryData([]);
+          }
+        } catch (error) {
+          if (!isForbidden(error)) {
+            logger.error('Failed to fetch inventory report', { error });
+          }
+          setCategoryData([]);
         }
-      } catch (error) {
-        if (!isForbidden(error)) {
-          logger.error('Failed to fetch inventory report', { error });
-        }
-        // Set mock data for demonstration
-        setCategoryData([
-          { name: 'Tools', value: 45 },
-          { name: 'Equipment', value: 32 },
-          { name: 'Materials', value: 28 },
-          { name: 'Electronics', value: 15 }
-        ]);
       }
 
-      // Fetch program report (currently not implemented in backend)
-      try {
-        const programResponse: any = await reportService.getProgramReport(filters);
-        if (programResponse?.programStats) {
-          setProgramData(programResponse.programStats.map((item: any) => ({
-            program: item.name,
-            trainees: item.enrolledCount || 0
-          })));
+      // Program enrollment is outside the inventory staff report scope.
+      if (isInventoryStaff) {
+        setProgramData([]);
+      } else {
+        try {
+          const programResponse = await reportService.getProgramReport(filters);
+          if (programResponse?.programStats) {
+            setProgramData(programResponse.programStats.map((item: any) => ({
+              id: item.id,
+              program: item.name,
+              students: item.students || []
+            })));
+          } else {
+            setProgramData([]);
+          }
+        } catch (error) {
+          if (!isForbidden(error)) {
+            logger.error('Failed to fetch program report', { error });
+          }
+          setProgramData([]);
         }
-      } catch (error) {
-        if (!isForbidden(error)) {
-          logger.error('Failed to fetch program report', { error });
-        }
-        // Set mock data for demonstration
-        setProgramData([
-          { program: 'Computer Literacy', trainees: 25 },
-          { program: 'Automotive Repair', trainees: 18 },
-          { program: 'Cosmetology', trainees: 22 },
-          { program: 'Culinary Arts', trainees: 15 },
-          { program: 'Electronics', trainees: 12 }
-        ]);
       }
     } catch (error) {
       logger.error('Failed to fetch reports', { error });
@@ -174,13 +220,18 @@ export default function ReportsPage() {
 
   const handleExport = async (format: string) => {
     try {
+      const exportType = isInventoryStaff && reportType === 'all'
+        ? 'items'
+        : isTrainingStaff && reportType === 'all'
+          ? 'trainees'
+          : reportType;
       if (format === 'pdf') {
-        await reportService.exportReportToPDF(reportType, {
+        await reportService.exportReportToPDF(exportType, {
           startDate: dateFrom,
           endDate: dateTo
         });
       } else if (format === 'csv') {
-        await reportService.exportReportToCSV(reportType, {
+        await reportService.exportReportToCSV(exportType, {
           startDate: dateFrom,
           endDate: dateTo
         });
@@ -227,8 +278,17 @@ export default function ReportsPage() {
     };
   }, []);
 
+  const filteredEmploymentRecords = employmentStatusRecords.filter((record) =>
+    (employmentProgramFilter === 'all' || record.programId === employmentProgramFilter) &&
+    (traineeStatusFilter === 'all' || record.traineeStatus === traineeStatusFilter)
+  );
+  const employmentProgramOptions = programData.filter((program) =>
+    employmentStatusRecords.some((record) => record.programId === program.id)
+  );
+  const traineeStatusOptions = [...new Set(employmentStatusRecords.map((record) => record.traineeStatus))];
+
   return (
-    <DashboardLayout title="Reports & Analytics">
+    <DashboardLayout title={isInventoryStaff ? 'Inventory Reports' : isTrainingStaff ? 'Trainee & Program Reports' : 'Reports & Analytics'}>
       {/* Conditionally render PrintableReport when isPrinting is true */}
       {isPrinting && (
         <PrintableReport
@@ -254,37 +314,39 @@ export default function ReportsPage() {
         <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-lg sm:text-2xl font-bold">Reports</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">View and export analytics data</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {isInventoryStaff ? 'View inventory and borrowing analytics' : isTrainingStaff ? 'View trainee and program analytics' : 'View and export analytics data'}
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleExport('csv')} className="flex-1 xs:flex-none h-9 text-xs xs:text-sm">
-              <FileText className="mr-1 xs:mr-2 size-3 xs:size-4" />
-              <span className="hidden xs:inline">Export CSV</span>
-              <span className="inline xs:hidden">CSV</span>
+            <Button variant="outline" size="sm" onClick={() => handleExport('csv')} className="flex-1 sm:flex-none h-9 text-xs sm:text-sm">
+              <FileText className="mr-1 sm:mr-2 size-3 sm:size-4" />
+              <span className="hidden sm:inline">Export CSV</span>
+              <span className="inline sm:hidden">CSV</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} className="flex-1 xs:flex-none h-9 text-xs xs:text-sm">
-              <Download className="mr-1 xs:mr-2 size-3 xs:size-4" />
-              <span className="hidden xs:inline">Export PDF</span>
-              <span className="inline xs:hidden">PDF</span>
+            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')} className="flex-1 sm:flex-none h-9 text-xs sm:text-sm">
+              <Download className="mr-1 sm:mr-2 size-3 sm:size-4" />
+              <span className="hidden sm:inline">Export PDF</span>
+              <span className="inline sm:hidden">PDF</span>
             </Button>
             <Button 
               variant="outline" 
               size="sm"
               onClick={handlePrint}
               disabled={isPrinting}
-              className="flex-1 xs:flex-none h-9 text-xs xs:text-sm"
+              className="flex-1 sm:flex-none h-9 text-xs sm:text-sm"
             >
               {isPrinting ? (
                 <>
-                  <Loader2 className="mr-1 xs:mr-2 size-3 xs:size-4 animate-spin" />
-                  <span className="hidden xs:inline">Preparing...</span>
-                  <span className="inline xs:hidden">...</span>
+                  <Loader2 className="mr-1 sm:mr-2 size-3 sm:size-4 animate-spin" />
+                  <span className="hidden sm:inline">Preparing...</span>
+                  <span className="inline sm:hidden">...</span>
                 </>
               ) : (
                 <>
-                  <Printer className="mr-1 xs:mr-2 size-3 xs:size-4" />
-                  <span className="hidden xs:inline">Print</span>
-                  <span className="inline xs:hidden">Prt</span>
+                  <Printer className="mr-1 sm:mr-2 size-3 sm:size-4" />
+                  <span className="hidden sm:inline">Print</span>
+                  <span className="inline sm:hidden">Prt</span>
                 </>
               )}
             </Button>
@@ -326,9 +388,9 @@ export default function ReportsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Activity</SelectItem>
-                    <SelectItem value="trainees">Trainees Only</SelectItem>
-                    <SelectItem value="items">Items Only</SelectItem>
-                    <SelectItem value="lendings">Lendings Only</SelectItem>
+                    {!isInventoryStaff && <SelectItem value="trainees">Trainees Only</SelectItem>}
+                    {!isTrainingStaff && <SelectItem value="items">Items Only</SelectItem>}
+                    {!isTrainingStaff && <SelectItem value="lendings">Lendings Only</SelectItem>}
                   </SelectContent>
                 </Select>
               </div>
@@ -380,9 +442,9 @@ export default function ReportsPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Activity</SelectItem>
-                      <SelectItem value="trainees">Trainees Only</SelectItem>
-                      <SelectItem value="items">Items Only</SelectItem>
-                      <SelectItem value="lendings">Lendings Only</SelectItem>
+                      {!isInventoryStaff && <SelectItem value="trainees">Trainees Only</SelectItem>}
+                      {!isTrainingStaff && <SelectItem value="items">Items Only</SelectItem>}
+                      {!isTrainingStaff && <SelectItem value="lendings">Lendings Only</SelectItem>}
                     </SelectContent>
                   </Select>
                 </div>
@@ -392,112 +454,266 @@ export default function ReportsPage() {
           </Card>
         </Collapsible>
 
+        {/* Summary Stats - Individual Cards */}
+        <div className={`grid gap-4 sm:grid-cols-2 ${isTrainingStaff ? 'lg:grid-cols-2' : isInventoryStaff ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+          {isTrainingStaff ? (
+            <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs sm:text-sm">Total Enrollments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="text-2xl sm:text-3xl font-bold">{newTrainees}</h3>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs sm:text-sm">Programs with Enrollments</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="text-2xl sm:text-3xl font-bold">{programData.length}</h3>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs sm:text-sm">Total Borrowed</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="text-2xl sm:text-3xl font-bold">{totalLendings}</h3>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs sm:text-sm">Items Returned</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="text-2xl sm:text-3xl font-bold">{itemsReturned}</h3>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs sm:text-sm">Active Borrowings</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <h3 className="text-2xl sm:text-3xl font-bold">{activeLoans}</h3>
+                </CardContent>
+              </Card>
+              {!isInventoryStaff && (
+                <>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs sm:text-sm">Total Trainees</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <h3 className="text-2xl sm:text-3xl font-bold">{totalTrainees}</h3>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs sm:text-sm">Total Programs</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <h3 className="text-2xl sm:text-3xl font-bold">{totalPrograms}</h3>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+            </>
+          )}
+
+          {!isInventoryStaff && !isTrainingStaff && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardDescription className="text-xs sm:text-sm">New Trainees</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <h3 className="text-2xl sm:text-3xl font-bold">{newTrainees}</h3>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
         {/* Charts */}
         <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
           {/* Activity Trend */}
-          <Card>
+          {!isInventoryStaff && !isTrainingStaff && hasPermission('canViewActivityLogs') && <Card>
             <CardHeader className="pb-2 sm:pb-4">
-              <CardTitle className="text-sm sm:text-base">Lending Activity Trend</CardTitle>
+              <CardTitle className="text-sm sm:text-base">Borrowing Activity Trend</CardTitle>
               <CardDescription className="text-xs sm:text-sm">Borrowing and returning over time</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 sm:h-80 md:h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={activityData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="borrowed" stroke="#1976D2" strokeWidth={2} name="Borrowed" />
-                    <Line type="monotone" dataKey="returned" stroke="#43A047" strokeWidth={2} name="Returned" />
-                  </LineChart>
-                </ResponsiveContainer>
+                {activityData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={activityData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="borrowed" stroke="#1976D2" strokeWidth={2} name="Borrowed" />
+                      <Line type="monotone" dataKey="returned" stroke="#43A047" strokeWidth={2} name="Returned" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <p>No activity data available</p>
+                  </div>
+                )}
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           {/* Category Distribution */}
-          <Card>
+          {!isTrainingStaff && <Card>
             <CardHeader className="pb-2 sm:pb-4">
               <CardTitle className="text-sm sm:text-base">Items by Category</CardTitle>
               <CardDescription className="text-xs sm:text-sm">Distribution of item categories</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 sm:h-80 md:h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryData.map((_, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {categoryData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={categoryData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {categoryData.map((_, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    <p>No category data available</p>
+                  </div>
+                )}
               </div>
             </CardContent>
-          </Card>
+          </Card>}
 
           {/* Program Enrollment */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Trainees by Program</CardTitle>
-              <CardDescription>Current enrollment across training programs</CardDescription>
+          {!isInventoryStaff && <Card className="lg:col-span-2">
+            <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle>Trainees by Program</CardTitle>
+                <CardDescription>Enrolled students in each training program</CardDescription>
+              </div>
+              <Select value={selectedProgram} onValueChange={setSelectedProgram}>
+                <SelectTrigger className="w-full sm:w-64">
+                  <SelectValue placeholder="Filter by program" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Programs</SelectItem>
+                  {programData.map((program) => (
+                    <SelectItem key={program.program} value={program.program}>
+                      {program.program}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={programData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="program" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="trainees" fill="#1976D2" name="Number of Trainees" />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="max-h-[300px] space-y-5 overflow-y-auto">
+                {programData.filter((program) => selectedProgram === 'all' || program.program === selectedProgram).length > 0 ? (
+                  programData
+                    .filter((program) => selectedProgram === 'all' || program.program === selectedProgram)
+                    .map((program) => (
+                    <div key={program.program} className="space-y-2">
+                      <h4 className="text-sm font-semibold">{program.program}</h4>
+                      {Array.isArray(program.students) && program.students.length > 0 ? (
+                        <ul className="grid gap-2 sm:grid-cols-2">
+                          {program.students.map((student: string) => (
+                            <li key={`${program.program}-${student}`} className="rounded-md border px-3 py-2 text-sm">
+                              {student}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No students enrolled</p>
+                      )}
+                    </div>
+                    ))
+                ) : (
+                  <div className="flex min-h-[180px] items-center justify-center text-muted-foreground">
+                    <p>No program data available</p>
+                  </div>
+                )}
               </div>
             </CardContent>
-          </Card>
-        </div>
+          </Card>}
 
-        {/* Summary Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Summary Statistics</CardTitle>
-            <CardDescription>Key metrics for the selected period</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Lendings</p>
-                <h3>{totalLendings}</h3>
+          {isLocalAdmin && <Card className="lg:col-span-2">
+            <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle>Employment Status</CardTitle>
+                <CardDescription>Trainees grouped by current employment status</CardDescription>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Items Returned</p>
-                <h3>{itemsReturned}</h3>
+              <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
+                <Select value={employmentProgramFilter} onValueChange={setEmploymentProgramFilter}>
+                  <SelectTrigger className="w-full sm:w-44">
+                    <SelectValue placeholder="Program" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Programs</SelectItem>
+                    {employmentProgramOptions.map((program) => (
+                      <SelectItem key={program.id} value={program.id}>{program.program}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={traineeStatusFilter} onValueChange={setTraineeStatusFilter}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="Trainee status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Trainees</SelectItem>
+                    {traineeStatusOptions.map((status) => (
+                      <SelectItem key={status} value={status}>{status}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Active Loans</p>
-                <h3>{activeLoans}</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="max-h-[300px] overflow-auto">
+                {filteredEmploymentRecords.length > 0 ? (
+                  <table className="w-full min-w-[620px] text-left text-sm">
+                    <thead className="sticky top-0 bg-card text-muted-foreground">
+                      <tr className="border-b">
+                        <th className="px-3 py-2 font-medium">Trainee</th>
+                        <th className="px-3 py-2 font-medium">Employment Status</th>
+                        <th className="px-3 py-2 font-medium">Program</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredEmploymentRecords.map((record) => (
+                        <tr key={record.id} className="border-b last:border-0 hover:bg-muted/50">
+                          <td className="max-w-[220px] truncate px-3 py-2 font-medium">{record.name}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{record.employmentStatus}</td>
+                          <td className="max-w-[360px] truncate px-3 py-2 text-muted-foreground">{record.program}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="py-8 text-center text-sm text-muted-foreground">No employment status data available</p>
+                )}
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">New Trainees</p>
-                <h3>{newTrainees}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>}
+        </div>
       </div>
     </DashboardLayout>
   );

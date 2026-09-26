@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -9,18 +9,19 @@ import { Label } from '../components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
 import { Separator } from '../components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Edit2, Save, X, Award, CheckCircle2, BookOpen, Clock } from 'lucide-react';
+import { Edit2, Save, X, Award, CheckCircle2, BookOpen, Camera } from 'lucide-react';
 import { getFileUrl } from '../services/api';
+import { uploadTraineePhoto } from '../utils/fileUpload';
 import { toast } from 'sonner';
 import traineeService from '../services/traineeService';
 import certificateService, { Certificate } from '../services/certificateService';
 import CertificateViewer from '../components/CertificateViewer';
 import { DashboardSkeletonLoader } from '../components/LoadingSkeletons';
-import { Skeleton } from '../components/ui/skeleton';
 import logger from '../utils/logger';
 import { TraineeStatusCard } from '../components/trainee/TraineeStatusCard';
 import TraineeStatusModal from '../components/TraineeStatusModal';
 import { useTraineeStatus } from '../hooks/useTraineeStatus';
+import type { TraineeStatusRecord as ServiceTraineeStatusRecord } from '../services/traineeStatusService';
 
 interface TraineeProfile {
   id: string;
@@ -66,6 +67,10 @@ export default function TraineeProfilePage() {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loadingCertificates, setLoadingCertificates] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { record: statusRecord, isLoading: statusLoading, error: statusError, refetch: refetchStatus } = useTraineeStatus(
     traineeProfile?.program_id ? `${traineeProfile.program_id}-${traineeProfile.id}` : undefined
@@ -124,8 +129,44 @@ export default function TraineeProfilePage() {
   const handleEditToggle = () => {
     if (editing) {
       setEditForm(traineeProfile || {});
+      setSelectedPhoto(null);
+      setPhotoPreview(null);
     }
     setEditing(!editing);
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setSelectedPhoto(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setSelectedPhoto(null);
+    setPhotoPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -136,6 +177,32 @@ export default function TraineeProfilePage() {
     try {
       setSaving(true);
       let updateData: any = {};
+      
+      // Handle photo upload first if a new photo was selected
+      if (selectedPhoto) {
+        setUploadingPhoto(true);
+        try {
+          const uploadResponse = await uploadTraineePhoto(
+            selectedPhoto,
+            traineeProfile?.id,
+            (progress) => {
+              // Optional: you can show upload progress here
+              logger.info('Upload progress', { progress });
+            }
+          );
+          if (uploadResponse.success && uploadResponse.filePath) {
+            updateData.photo_path = uploadResponse.filePath;
+          }
+        } catch (error: any) {
+          logger.error('Failed to upload photo', { error });
+          toast.error(error?.message || 'Failed to upload photo');
+          setSaving(false);
+          setUploadingPhoto(false);
+          return;
+        } finally {
+          setUploadingPhoto(false);
+        }
+      }
       
       if (editForm.phone !== traineeProfile?.phone) {
         updateData.phone = editForm.phone;
@@ -165,6 +232,8 @@ export default function TraineeProfilePage() {
       await traineeService.updateMyProfile(updateData);
       await loadProfileData();
       setEditing(false);
+      setSelectedPhoto(null);
+      setPhotoPreview(null);
       toast.success('Profile updated successfully');
     } catch (error: any) {
       logger.error('Failed to save profile', { error });
@@ -199,6 +268,32 @@ export default function TraineeProfilePage() {
     );
   }
 
+  const modalStatusRecord: ServiceTraineeStatusRecord | undefined = statusRecord
+    ? {
+        id: statusRecord.id,
+        tenant_id: statusRecord.tenantId,
+        trainee_id: statusRecord.traineeId,
+        enrollment_id: statusRecord.enrollmentId,
+        graduation_status: statusRecord.graduationStatus,
+        graduation_date: statusRecord.graduationDate,
+        certificate_id: statusRecord.certificateId,
+        employment_status: statusRecord.employmentStatus,
+        job_title: statusRecord.jobTitle,
+        employer_name: statusRecord.employerName,
+        job_start_date: statusRecord.jobStartDate,
+        job_sector: statusRecord.jobSector,
+        skills_match: statusRecord.skillsMatch,
+        skills_match_percentage: statusRecord.skillsMatchPercentage,
+        remarks: statusRecord.remarks,
+        unemployment_reason: statusRecord.unemploymentReason,
+        recorded_by: statusRecord.recordedBy,
+        recorded_at: statusRecord.recordedAt,
+        last_updated_by: statusRecord.lastUpdatedBy,
+        updated_at: statusRecord.updatedAt,
+        deleted_at: statusRecord.deletedAt,
+      }
+    : undefined;
+
   return (
     <DashboardLayout title="Profile">
       <main className="w-full">
@@ -206,12 +301,48 @@ export default function TraineeProfilePage() {
           {/* HEADER */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 sm:gap-10">
             <div className="flex items-start gap-6">
-              <Avatar className="h-24 w-24 border-2 border-gray-200 dark:border-gray-700">
-                <AvatarImage src={traineeProfile?.photo_path ? getFileUrl(traineeProfile.photo_path) : ''} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
-                  {traineeProfile?.first_name?.[0]}{traineeProfile?.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <Avatar className="h-24 w-24 border-2 border-gray-200 dark:border-gray-700">
+                  <AvatarImage 
+                    src={
+                      photoPreview || 
+                      (traineeProfile?.photo_path ? getFileUrl(traineeProfile.photo_path) : '')
+                    } 
+                  />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
+                    {traineeProfile?.first_name?.[0]}{traineeProfile?.last_name?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                {editing && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer group hover:bg-black/60 transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoSelect}
+                      className="hidden"
+                      id="photo-upload"
+                    />
+                    <label 
+                      htmlFor="photo-upload" 
+                      className="cursor-pointer flex flex-col items-center justify-center w-full h-full"
+                    >
+                      <Camera className="h-8 w-8 text-white mb-1" />
+                      <span className="text-[10px] text-white font-medium">Change</span>
+                    </label>
+                  </div>
+                )}
+                {editing && selectedPhoto && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                    onClick={handleRemovePhoto}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                   {traineeProfile?.first_name} {traineeProfile?.last_name}
@@ -236,13 +367,22 @@ export default function TraineeProfilePage() {
               )}
               {editing && (
                 <>
-                  <Button variant="outline" onClick={handleEditToggle} disabled={saving}>
+                  <Button variant="outline" onClick={handleEditToggle} disabled={saving || uploadingPhoto}>
                     <X className="h-4 w-4" />
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveProfile} disabled={saving}>
-                    {saving ? <div className="animate-spin h-4 w-4 border-2 border-transparent border-t-white rounded-full" /> : <Save className="h-4 w-4" />}
-                    Save
+                  <Button onClick={handleSaveProfile} disabled={saving || uploadingPhoto}>
+                    {(saving || uploadingPhoto) ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-transparent border-t-white rounded-full mr-2" />
+                        {uploadingPhoto ? 'Uploading...' : 'Saving...'}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4" />
+                        Save
+                      </>
+                    )}
                   </Button>
                 </>
               )}
@@ -461,7 +601,7 @@ export default function TraineeProfilePage() {
         traineeId={traineeProfile?.id || ''}
         traineeName={traineeProfile ? `${traineeProfile.first_name} ${traineeProfile.last_name}` : undefined}
         programName={traineeProfile?.program?.name}
-        existingStatus={statusRecord || undefined}
+        existingStatus={modalStatusRecord}
         onStatusCreated={() => {
           refetchStatus();
           setStatusModalOpen(false);

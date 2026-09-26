@@ -10,6 +10,9 @@ export interface ReportFilters {
   endDate?: string;
   module?: string;
   format?: 'json' | 'csv' | 'pdf';
+  program_id?: string;
+  employment_status?: string;
+  trainee_status?: string;
 }
 
 export interface DashboardStats {
@@ -37,14 +40,24 @@ export interface DashboardStats {
     upcoming: number;
     completed: number;
   };
+  employmentStatusCounts: Record<string, number>;
 }
 
 export interface TraineeReport {
-  totalTrainees: number;
+  totalEnrollments: number;
   byProgram: Record<string, number>;
   byStatus: Record<string, number>;
   enrollmentTrend: Array<{ date: string; count: number }>;
   completionRate: number;
+  employmentStatusCounts: Record<string, number>;
+  employmentStatusRecords: Array<{
+    id: string;
+    name: string;
+    employmentStatus: string;
+    traineeStatus: string;
+    programId: string | null;
+    program: string;
+  }>;
 }
 
 export interface AttendanceReport {
@@ -141,6 +154,7 @@ export interface ProgramReport {
     capacity: number;
     start_date: string;
     end_date: string;
+    students: string[];
   }>;
 }
 
@@ -208,8 +222,8 @@ class ReportService {
   /**
    * Get dashboard statistics
    */
-  async getDashboardStats(): Promise<DashboardStats> {
-    const response = await api.get<DashboardStats>('/reports/dashboard');
+  async getDashboardStats(filters?: ReportFilters): Promise<DashboardStats> {
+    const response = await api.get<DashboardStats>('/reports/dashboard', filters);
     return response.data;
   }
 

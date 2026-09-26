@@ -69,7 +69,6 @@ const ProgramEnrollmentPage = lazyPage(() => import('./pages/ProgramEnrollmentPa
 const LandingContentEditorPage = lazyPage(() => import('./pages/LandingContentEditorPage'));
 const RequirementsManagementPage = lazyPage(() => import('./pages/RequirementsManagementPage'));
 const RequirementDetailPage = lazyPage(() => import('./pages/RequirementDetailPage'));
-const RequirementsAnalyticsPage = lazyPage(() => import('./pages/RequirementsAnalyticsPage'));
 
 
 // Redirect components for login and register
@@ -196,7 +195,6 @@ export default function App() {
                   <Route path="/admin/requirements/new" element={<ProtectedRoute allowedRoles={['local_admin', 'super_admin']}><RequirementDetailPage /></ProtectedRoute>} />
                   <Route path="/admin/requirements/:id" element={<ProtectedRoute allowedRoles={['local_admin', 'super_admin']}><RequirementDetailPage /></ProtectedRoute>} />
                   <Route path="/admin/requirements/:id/edit" element={<ProtectedRoute allowedRoles={['local_admin', 'super_admin']}><RequirementDetailPage /></ProtectedRoute>} />
-                  <Route path="/admin/requirements/analytics" element={<ProtectedRoute allowedRoles={['local_admin', 'super_admin']}><RequirementsAnalyticsPage /></ProtectedRoute>} />
                   <Route path="/account-management"    element={<ProtectedRoute><AccountManagementPage /></ProtectedRoute>} />
                   <Route path="/non-attendance-dates"  element={<ProtectedRoute><NonAttendanceDatesPage /></ProtectedRoute>} />
                   <Route path="/registrations"        element={<ProtectedRoute><RegistrationsPage /></ProtectedRoute>} />

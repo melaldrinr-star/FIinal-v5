@@ -268,21 +268,21 @@ export default function AttendancePage() {
 
   return (
     <DashboardLayout>
-      <div className="h-[calc(100vh-80px)] overflow-hidden p-3">
-        <div className="h-full flex flex-col max-w-5xl mx-auto">
+      <div className="min-h-[calc(100dvh-80px)] overflow-visible p-3">
+        <div className="min-h-[calc(100dvh-80px)] flex flex-col max-w-5xl mx-auto">
           
           {/* Header */}
-          <div className="flex items-center justify-between mb-2 shrink-0">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-2 shrink-0">
+            <div className="flex min-w-0 items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => navigate('/programs')} className="shrink-0 h-8 w-8">
                 <ChevronLeft className="size-4" />
               </Button>
-              <div>
-                <h1 className="text-base font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>{program?.name || 'Attendance'}</h1>
+              <div className="min-w-0">
+                <h1 className="truncate text-base font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>{program?.name || 'Attendance'}</h1>
                 <p className="text-[10px] text-muted-foreground">{today.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2">
               <div className="text-center px-2"><div className="flex items-center gap-1"><TrendingUp className="size-3" style={{ color: 'var(--secondary)' }} /></div><p className="text-xs font-bold" style={{ color: 'var(--secondary)' }}>{stats.presentCount}/{stats.totalSessions}</p></div>
               <div className="text-center px-2"><div className="flex items-center gap-1"><Flame className="size-3" style={{ color: 'var(--accent)' }} /></div><p className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{stats.rate}%</p></div>
             </div>
@@ -487,12 +487,12 @@ export default function AttendancePage() {
                   {schedules.map((s) => (
                     <Card key={s.id} className={s.status === 'active' ? 'border-primary' : ''}>
                       <CardContent className="p-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">{s.name}</p>
-                            <p className="text-[10px] text-muted-foreground">AM: {s.morning_open?.slice(0, 5)} - {s.morning_close?.slice(0, 5)} | PM: {s.afternoon_open?.slice(0, 5)} - {s.afternoon_close?.slice(0, 5)}</p>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{s.name}</p>
+                            <p className="break-words text-[10px] text-muted-foreground">AM: {s.morning_open?.slice(0, 5)} - {s.morning_close?.slice(0, 5)} | PM: {s.afternoon_open?.slice(0, 5)} - {s.afternoon_close?.slice(0, 5)}</p>
                           </div>
-                          <div className="flex gap-1">
+                          <div className="flex flex-wrap gap-1 sm:shrink-0 sm:justify-end">
                             {s.status === 'active' ? <Badge className="text-[10px] bg-green-600">Active</Badge> : (
                               <Button size="sm" variant="outline" onClick={async () => { try { await attendanceService.activateSchedule(s.id); loadSchedules(); toast.success('Activated'); } catch { toast.error('Failed'); } }} className="h-6 text-[10px]">Activate</Button>
                             )}

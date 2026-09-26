@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { Download, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
-import api from '../services/api';
+import api, { getFileUrl } from '../services/api';
 
 export interface FilePreviewData {
+  file_id?: string;
   file_path: string;
   file_name: string;
   requirement_type: string;
@@ -48,7 +49,9 @@ export default function FilePreviewModal({ file, open, onOpenChange, traineeId }
     
     try {
       setIsDownloading(true);
-      const downloadUrl = `/trainees/${traineeId}/requirements/${file.requirement_type}/download`;
+      const downloadUrl = `/trainees/${traineeId}/requirements/${file.requirement_type}/download${
+        file.file_id ? `?file_id=${encodeURIComponent(file.file_id)}` : ''
+      }`;
       const fileName = file.file_name || 'document';
       
       console.log('[FilePreviewModal] Downloading file', { 
@@ -64,7 +67,7 @@ export default function FilePreviewModal({ file, open, onOpenChange, traineeId }
       console.log('[FilePreviewModal] Download complete');
     } catch (error) {
       console.error('[FilePreviewModal] Download failed:', error);
-      alert('Failed to download file. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to download file. Please try again.');
     } finally {
       setIsDownloading(false);
     }
@@ -96,6 +99,9 @@ export default function FilePreviewModal({ file, open, onOpenChange, traineeId }
             <DialogTitle className="text-lg font-semibold">
               {formatType(file.requirement_type)}
             </DialogTitle>
+            <DialogDescription className="sr-only">
+              Preview the submitted requirement file and download it if needed.
+            </DialogDescription>
             <div className="text-sm text-muted-foreground mt-1 space-y-1">
               <p>File: {file.file_name}</p>
               <p>Uploaded: {uploadDate}</p>
@@ -114,7 +120,7 @@ export default function FilePreviewModal({ file, open, onOpenChange, traineeId }
               }}
             >
               <img 
-                src={file.file_path} 
+                src={getFileUrl(file.file_path)}
                 alt={file.file_name}
                 className="max-h-96 max-w-2xl object-contain rounded"
               />
