@@ -43,16 +43,29 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
-  // Rate limit: 50 attempts per IP per 15 minutes (increased for development)
-
-const rlResponse = checkRateLimit(getRateLimitKey(request, 'login'), {
-    limit: 50,
-    windowMs: 15 * 60 * 1000,
+  // ────────────────────────────────────────────────────────────────────────
+  // Rate limiting: Stricter limits to prevent brute force attacks
+  // - Overall limit: 5 failed attempts per IP per 15 minutes
+  // - Per-email limit: 3 attempts per email per 15 minutes  
+  // ────────────────────────────────────────────────────────────────────────
+  
+  const ipKey = getRateLimitKey(request, 'login_ip');
+  const rlResponse = checkRateLimit(ipKey, {
+    limit: 5,
+    windowMs: 15 * 60 * 1000, // 15 minutes
   });
   if (rlResponse) return rlResponse as NextResponse;
 
   const body = await request.json();
   const validatedData = loginSchema.parse(body);
+
+  // Per-email rate limiting to prevent user enumeration
+  const emailKey = `login_email:${validatedData.email}`;
+  const emailRlResponse = checkRateLimit(emailKey, {
+    limit: 3,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+  });
+  if (emailRlResponse) return emailRlResponse as NextResponse;
 
   // ── Step 1: Find user by email ──────────────────────────────────────────
 
@@ -64,6 +77,7 @@ const { data: user, error } = await supabaseAdmin
 
   if (error || !user) {
     // Generic message — do not reveal whether email exists (Req 6.9)
+    // Rate limit already applied above
 
 return unauthorizedResponse('Invalid email or password');
   }

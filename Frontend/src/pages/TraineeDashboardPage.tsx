@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import DashboardLayout from '../components/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
-import { Progress } from '../components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar';
+
+
+
+
+
 import { 
   GraduationCap, 
   Calendar, 
@@ -120,7 +122,7 @@ export default function TraineeDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [traineeProfile, setTraineeProfile] = useState<TraineeProfile | null>(null);
   const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null);
-  const [recentAttendance, setRecentAttendance] = useState<Attendance[]>([]);
+  const [_recentAttendance, setRecentAttendance] = useState<Attendance[]>([]);
   const [upcomingSessions, setUpcomingSessions] = useState<ProgramSession[]>([]);
   const [excludedDates, setExcludedDates] = useState<ExcludedDate[]>([]);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -218,7 +220,7 @@ export default function TraineeDashboardPage() {
     };
   }, [user]);
 
-  const formatDate = (dateString: string) => {
+  const _formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -227,7 +229,7 @@ export default function TraineeDashboardPage() {
     });
   };
 
-  const formatTime = (timeString: string) => {
+  const _formatTime = (timeString: string) => {
     const [hours, minutes] = timeString.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -235,7 +237,7 @@ export default function TraineeDashboardPage() {
     return `${hour12}:${minutes} ${ampm}`;
   };
 
-  const getStatusIcon = (status: string) => {
+  const _getStatusIcon = (status: string) => {
     switch (status) {
       case 'present':
         return <CheckCircle2 className="size-4 text-green-500" />;
@@ -250,7 +252,7 @@ export default function TraineeDashboardPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const _getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
       present: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
       absent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
@@ -260,7 +262,7 @@ export default function TraineeDashboardPage() {
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const getSessionTypeBadge = (type: string) => {
+  const _getSessionTypeBadge = (type: string) => {
     const colors: Record<string, string> = {
       lecture: 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300',
       lab: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/50 dark:text-indigo-300',
@@ -387,3 +389,5 @@ export default function TraineeDashboardPage() {
     </DashboardLayout>
   );
 }
+
+

@@ -93,9 +93,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should not produce console errors when accessing undefined hero properties', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -139,9 +139,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should not produce console errors when accessing undefined ctaBanner properties', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -187,9 +187,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should not produce console errors when accessing undefined features array', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -233,9 +233,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should not produce console errors when contact properties are undefined', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -285,9 +285,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should handle undefined values without errors', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -330,9 +330,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should handle null values without errors', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -373,9 +373,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should handle object values with value property without errors', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -420,9 +420,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should use optional chaining to prevent nested property errors', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -464,9 +464,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should not produce React errors when rendering with undefined CMS values', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -511,9 +511,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should handle missing props gracefully without warnings', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -560,9 +560,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should handle network errors gracefully without console errors', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -598,9 +598,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should not produce undefined reference errors when API fails', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -633,9 +633,9 @@ describe('NewLandingPage - Console Error Prevention', () => {
      */
     it('should render features safely with missing or invalid icon names', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }

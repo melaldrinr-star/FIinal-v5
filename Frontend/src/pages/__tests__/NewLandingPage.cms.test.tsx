@@ -144,9 +144,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should display default hero badge when CMS returns empty data', async () => {
       // Arrange - Setup mock to return empty CMS data on second call (first is tenants)
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -170,9 +170,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should display default feature cards when CMS returns no features', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -199,9 +199,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should display default CTA banner when CMS returns no ctaBanner', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -230,9 +230,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should use defaults for missing hero fields when CMS has partial data', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -262,9 +262,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should merge CMS data with defaults for partially provided data', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -297,9 +297,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should use defaults when CMS API returns error', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -324,9 +324,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should use defaults when CMS API throws error', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -351,9 +351,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
     it('should not produce console errors when CMS API fails', async () => {
       // Arrange
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -389,9 +389,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should render empty string when ctaBanner values are undefined', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -428,9 +428,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should correctly handle string values in getValue()', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -455,9 +455,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should handle object values with value property in getValue()', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -496,9 +496,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should render all custom CMS content when complete data is provided', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -525,9 +525,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should render feature icons correctly based on CMS data', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -553,9 +553,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should display default contact information when CMS data is missing', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -580,9 +580,9 @@ describe('NewLandingPage - CMS Fallback Mechanisms', () => {
      */
     it('should display custom contact information from CMS', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }

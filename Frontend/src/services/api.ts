@@ -33,20 +33,32 @@ const apiClient: AxiosInstance = axios.create({
 
 /**
  * Request Interceptor
- * Log requests in development and handle auth token
+ * Log requests in development and handle auth token with device fingerprint validation
  */
 apiClient.interceptors.request.use(
   async (config) => {
     // Import here to avoid circular dependency
     const { getEncryptedToken } = await import('../utils/encryption');
+    const { validateTokenBinding } = await import('../utils/deviceFingerprint');
     
     // Get encrypted token from sessionStorage and decrypt
     const token = await getEncryptedToken('bmdc-auth-token');
     
     if (token) {
+      // Validate token binding (device fingerprint match)
+      const isTokenValid = await validateTokenBinding(token);
+      if (!isTokenValid) {
+        logger.warn('[API Request] Token binding validation failed - possible device change or token theft');
+        // Clear invalid token
+        const { removeEncryptedToken } = await import('../utils/encryption');
+        removeEncryptedToken('bmdc-auth-token');
+        // Don't proceed with invalid token
+        throw new Error('Token validation failed. Please log in again.');
+      }
+
       config.headers.Authorization = `Bearer ${token}`;
       if (import.meta.env.DEV) {
-        logger.debug(`[API Request] Adding Authorization header`);
+        logger.debug(`[API Request] Adding Authorization header with token binding validated`);
       }
     }
 
@@ -132,13 +144,15 @@ apiClient.interceptors.response.use(
       try {
         const response = await apiClient.post<{ data: { token: string; refreshToken: string } }>('/auth/refresh');
         
-        // Store refreshed tokens encrypted
+        // Store refreshed tokens encrypted with device fingerprint binding
         // API response structure: { success, data: { token, refreshToken, user }, message }
         if (response.data.data?.token) {
           const { setEncryptedToken } = await import('../utils/encryption');
-          await setEncryptedToken('bmdc-auth-token', response.data.data.token);
+          const { storeTokenWithFingerprint } = await import('../utils/deviceFingerprint');
+          
+          await storeTokenWithFingerprint('bmdc-auth-token', response.data.data.token);
           if (response.data.data.refreshToken) {
-            await setEncryptedToken('bmdc-refresh-token', response.data.data.refreshToken);
+            await storeTokenWithFingerprint('bmdc-refresh-token', response.data.data.refreshToken);
           }
         }
         
@@ -459,7 +473,7 @@ export function getFileUrl(path: string | null | undefined): string {
     // /uploads/{tenant_id}/images/items/photo.jpg
     // → {API_BASE_URL}/files/{tenant_id}/images/items/photo.jpg
     const withoutUploadsPrefix = path.replace(/^\/uploads\//, '');
-    return `${API_BASE_URL}/files/${withoutUploadsPrefix}`;
+    const hash = Math.abs(path.split("").reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0)).toString(16); return `${API_BASE_URL}/files/${withoutUploadsPrefix}?v=${hash}`;
   }
 
   // Legacy flat path → serve directly from the public directory
@@ -532,5 +546,7 @@ export function getThumbnailUrl(path: string | null | undefined): string {
 }
 
 export default api;
+
+
 
 

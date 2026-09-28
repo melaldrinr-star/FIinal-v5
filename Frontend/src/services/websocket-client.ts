@@ -418,7 +418,7 @@ class WebSocketClient {
       // Step 1: Parse JSON from message
       message = JSON.parse(event.data) as WebSocketMessage;
     } catch (parseError) {
-      const error = parseError instanceof Error ? parseError : new Error('Unknown parse error');
+      const _error = parseError instanceof Error ? parseError : new Error('Unknown parse error');
       console.error('[WebSocket] Failed to parse message JSON:', error.message);
       this.emitError(new Error(`Invalid WebSocket message format: ${error.message}`));
       return; // Discard unparseable message
@@ -504,7 +504,7 @@ class WebSocketClient {
    */
   private handleEnrollmentUpdated(message: WebSocketMessage): void {
     if (!message.data?.enrollment) {
-      const error = 'Enrollment updated message missing enrollment data';
+      const _error = 'Enrollment updated message missing enrollment data';
       console.warn('[WebSocket]', error);
       this.emitError(new Error(error));
       return;
@@ -555,7 +555,7 @@ class WebSocketClient {
    */
   private handleEnrollmentAdded(message: WebSocketMessage): void {
     if (!message.data?.enrollment) {
-      const error = 'Enrollment added message missing enrollment data';
+      const _error = 'Enrollment added message missing enrollment data';
       console.warn('[WebSocket]', error);
       this.emitError(new Error(error));
       return;
@@ -606,7 +606,7 @@ class WebSocketClient {
    */
   private handleEnrollmentRemoved(message: WebSocketMessage): void {
     if (!message.data?.enrollmentId) {
-      const error = 'Enrollment removed message missing enrollmentId';
+      const _error = 'Enrollment removed message missing enrollmentId';
       console.warn('[WebSocket]', error);
       this.emitError(new Error(error));
       return;

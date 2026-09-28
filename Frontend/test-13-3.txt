@@ -1,0 +1,515 @@
+npm notice run bmdc-responsive-web-interface@0.1.0 test
+npm notice run vitest run --run QR_Scanner_Modal.render.test.tsx -t Test 13.3
+
+ RUN  v4.1.5 C:/Users/Paolo Amor P. Palma/Downloads/FIinal-v5/Frontend
+
+ Γ¥» src/components/__tests__/QR_Scanner_Modal.render.test.tsx (7 tests | 2 failed | 5 skipped) 54ms
+     ├ù Test 13.3: should show Retry button for NotFoundError 41ms
+     ├ù Test 13.3b: should show Retry button for NotReadableError 11ms
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 2 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/components/__tests__/QR_Scanner_Modal.render.test.tsx > QR Scanner Modal - Render Tests (Task 13) > Test 13.3: should show Retry button for NotFoundError
+TestingLibraryElementError: Found multiple elements with the text: No camera found
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<div
+  aria-atomic="true"
+  aria-live="polite"
+  class="sr-only"
+  role="status"
+>
+  No camera found
+</div>
+
+Ignored nodes: comments, script, style
+<div
+  aria-atomic="true"
+  aria-live="polite"
+  class="sr-only"
+  role="status"
+>
+  No camera found
+</div>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body
+  style="overflow: hidden;"
+>
+  <div />
+  <div
+    aria-modal="true"
+    class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-2 pt-4 backdrop-blur-md sm:items-center sm:px-0 sm:pt-0"
+    role="dialog"
+  >
+    <div
+      class="flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl bg-white shadow-2xl sm:max-h-[90dvh] sm:w-96 sm:rounded-xl"
+    >
+      <canvas
+        class="hidden"
+      />
+      <div
+        class="flex items-center justify-between p-4 border-b border-slate-200 shrink-0"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <svg
+            class="lucide lucide-qr-code h-5 w-5 text-slate-700"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="5"
+              rx="1"
+              width="5"
+              x="3"
+              y="3"
+            />
+            <rect
+              height="5"
+              rx="1"
+              width="5"
+              x="16"
+              y="3"
+            />
+            <rect
+              height="5"
+              rx="1"
+              width="5"
+              x="3"
+              y="16"
+            />
+            <path
+              d="M21 16h-3a2 2 0 0 0-2 2v3"
+            />
+            <path
+              d="M21 21v.01"
+            />
+            <path
+              d="M12 7v3a2 2 0 0 1-2 2H7"
+            />
+            <path
+              d="M3 12h.01"
+            />
+            <path
+              d="M12 3h.01"
+            />
+            <path
+              d="M12 16v.01"
+            />
+            <path
+              d="M16 12h1"
+            />
+            <path
+              d="M21 12v.01"
+            />
+            <path
+              d="M12 21v-1"
+            />
+          </svg>
+          <div>
+            <h1
+              class="text-base font-bold text-slate-900"
+            >
+              Lending QR Scan
+            </h1>
+            <p
+              class="text-xs text-slate-600"
+            >
+              Scan items to borrow
+            </p>
+          </div>
+        </div>
+        <button
+          class="p-1 hover:bg-slate-100 rounded-lg text-slate-600"
+        >
+          <svg
+            class="lucide lucide-x h-5 w-5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M18 6 6 18"
+            />
+            <path
+              d="m6 6 12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="px-4 pt-3 pb-2 border-b border-slate-200 shrink-0"
+      >
+        <div
+          class="flex items-center justify-between mb-2"
+        >
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="px-3 py-1.5 text-xs font-semibold rounded transition bg-green-600 text-white"
+            >
+              BORROW
+            </button>
+            <button
+              class="px-3 py-1.5 text-xs font-semibold rounded transition bg-slate-100 text-slate-900 hover:bg-slate-200"
+            >
+              RETURN
+            </button>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-1.5 text-xs text-slate-600"
+        >
+          <span
+            class="text-sm"
+          >
+            Status:
+          </span>
+          <span
+            class="relative flex h-1.5 w-1.5"
+          >
+            <span
+              class="absolute inline-flex h-1.5 w-1.5 animate-ping rounded-full bg-green-500 opacity-75"
+            />
+            <span
+              class="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500"
+            />
+          </span>
+          Ready
+        </div>
+      </div>
+      <div
+        class="relative aspect-video shrink-0 overflow-hidden border-4 border-green-400 bg-black"
+      >
+        <video
+          autoplay=""
+          class="size-full object-cover "
+          playsinline=""
+        />
+      </div>
+      <div
+        class="flex min-h-20 shrink-0 items-center justify-center p-4"
+      >
+        <p
+          class="text-sm text-slate-600 text-center"
+        >
+          Position QR code in frame to scan
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    No camera found
+  </div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    No camera found
+  </div>
+</body>
+ Γ¥» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ Γ¥» getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ Γ¥» getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ Γ¥» getByText node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ Γ¥» src/components/__tests__/QR_Scanner_Modal.render.test.tsx:274:19
+    272|
+    273|     // Verify error message is visible
+    274|     expect(screen.getByText('No camera found')).toBeInTheDocument();
+       |                   ^
+    275|
+    276|     // Verify Retry button is visible by finding it by role
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/2]ΓÄ»
+
+ FAIL  src/components/__tests__/QR_Scanner_Modal.render.test.tsx > QR Scanner Modal - Render Tests (Task 13) > Test 13.3b: should show Retry button for NotReadableError
+TestingLibraryElementError: Found multiple elements with the text: Camera already in use
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+<div
+  aria-atomic="true"
+  aria-live="polite"
+  class="sr-only"
+  role="status"
+>
+  Camera already in use
+</div>
+
+Ignored nodes: comments, script, style
+<div
+  aria-atomic="true"
+  aria-live="polite"
+  class="sr-only"
+  role="status"
+>
+  Camera already in use
+</div>
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+<body
+  style="overflow: hidden;"
+>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    No camera found
+  </div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    No camera found
+  </div>
+  <div />
+  <div
+    aria-modal="true"
+    class="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-2 pt-4 backdrop-blur-md sm:items-center sm:px-0 sm:pt-0"
+    role="dialog"
+  >
+    <div
+      class="flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-xl bg-white shadow-2xl sm:max-h-[90dvh] sm:w-96 sm:rounded-xl"
+    >
+      <canvas
+        class="hidden"
+      />
+      <div
+        class="flex items-center justify-between p-4 border-b border-slate-200 shrink-0"
+      >
+        <div
+          class="flex items-center gap-2"
+        >
+          <svg
+            class="lucide lucide-qr-code h-5 w-5 text-slate-700"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              height="5"
+              rx="1"
+              width="5"
+              x="3"
+              y="3"
+            />
+            <rect
+              height="5"
+              rx="1"
+              width="5"
+              x="16"
+              y="3"
+            />
+            <rect
+              height="5"
+              rx="1"
+              width="5"
+              x="3"
+              y="16"
+            />
+            <path
+              d="M21 16h-3a2 2 0 0 0-2 2v3"
+            />
+            <path
+              d="M21 21v.01"
+            />
+            <path
+              d="M12 7v3a2 2 0 0 1-2 2H7"
+            />
+            <path
+              d="M3 12h.01"
+            />
+            <path
+              d="M12 3h.01"
+            />
+            <path
+              d="M12 16v.01"
+            />
+            <path
+              d="M16 12h1"
+            />
+            <path
+              d="M21 12v.01"
+            />
+            <path
+              d="M12 21v-1"
+            />
+          </svg>
+          <div>
+            <h1
+              class="text-base font-bold text-slate-900"
+            >
+              Lending QR Scan
+            </h1>
+            <p
+              class="text-xs text-slate-600"
+            >
+              Scan items to borrow
+            </p>
+          </div>
+        </div>
+        <button
+          class="p-1 hover:bg-slate-100 rounded-lg text-slate-600"
+        >
+          <svg
+            class="lucide lucide-x h-5 w-5"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M18 6 6 18"
+            />
+            <path
+              d="m6 6 12 12"
+            />
+          </svg>
+        </button>
+      </div>
+      <div
+        class="px-4 pt-3 pb-2 border-b border-slate-200 shrink-0"
+      >
+        <div
+          class="flex items-center justify-between mb-2"
+        >
+          <div
+            class="flex gap-2"
+          >
+            <button
+              class="px-3 py-1.5 text-xs font-semibold rounded transition bg-green-600 text-white"
+            >
+              BORROW
+            </button>
+            <button
+              class="px-3 py-1.5 text-xs font-semibold rounded transition bg-slate-100 text-slate-900 hover:bg-slate-200"
+            >
+              RETURN
+            </button>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-1.5 text-xs text-slate-600"
+        >
+          <span
+            class="text-sm"
+          >
+            Status:
+          </span>
+          <span
+            class="relative flex h-1.5 w-1.5"
+          >
+            <span
+              class="absolute inline-flex h-1.5 w-1.5 animate-ping rounded-full bg-green-500 opacity-75"
+            />
+            <span
+              class="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500"
+            />
+          </span>
+          Ready
+        </div>
+      </div>
+      <div
+        class="relative aspect-video shrink-0 overflow-hidden border-4 border-green-400 bg-black"
+      >
+        <video
+          autoplay=""
+          class="size-full object-cover "
+          playsinline=""
+        />
+      </div>
+      <div
+        class="flex min-h-20 shrink-0 items-center justify-center p-4"
+      >
+        <p
+          class="text-sm text-slate-600 text-center"
+        >
+          Position QR code in frame to scan
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    Camera already in use
+  </div>
+  <div
+    aria-atomic="true"
+    aria-live="polite"
+    class="sr-only"
+    role="status"
+  >
+    Camera already in use
+  </div>
+</body>
+ Γ¥» Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ Γ¥» getElementError node_modules/@testing-library/dom/dist/query-helpers.js:20:35
+ Γ¥» getMultipleElementsFoundError node_modules/@testing-library/dom/dist/query-helpers.js:23:10
+ Γ¥» node_modules/@testing-library/dom/dist/query-helpers.js:55:13
+ Γ¥» getByText node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ Γ¥» src/components/__tests__/QR_Scanner_Modal.render.test.tsx:318:19
+    316|
+    317|     // Verify error message is visible
+    318|     expect(screen.getByText('Camera already in use')).toBeInTheDocumenΓÇª
+       |                   ^
+    319|
+    320|     // Verify Retry button is visible
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/2]ΓÄ»
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 skipped (7)
+   Start at  22:09:24
+   Duration  953ms (transform 86ms, setup 115ms, import 126ms, tests 54ms, environment 536ms)
+

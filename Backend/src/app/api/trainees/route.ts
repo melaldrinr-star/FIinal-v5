@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { traineeService } from '@/services/traineeService';
 import { requireTenantContext } from '@/middleware/tenantContext';
+import { requireRole, requireTenantAccess } from '@/utils/authorization';
 import { createTraineeSchema } from '@/utils/validators';
 import { successResponse, forbiddenResponse } from '@/utils/responses';
 import { withErrorHandler } from '@/middleware/errorHandler';
@@ -34,10 +35,10 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 
   // Pass full context to service (Task 3.3: Services need isSuperAdmin flag)
 
-const trainees = await traineeService.getAllTrainees(context, {
-  program_id,
-  status,
-  search,
+  const trainees = await traineeService.getAllTrainees(context, {
+    program_id,
+    status,
+    search,
   });
   return successResponse(trainees);
 });
@@ -50,27 +51,29 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   const { tenantId, userId, role } = ctxResult.context;
 
+  // DENY BY DEFAULT: Check role before creating trainee
   const allowedRoles = ['local_admin', 'staff_training_coordinator'];
-  if (!allowedRoles.includes(role)) {
-  return forbiddenResponse('Insufficient permissions to create trainees');
+  if (!requireRole(ctxResult.context, allowedRoles)) {
+    return forbiddenResponse('Insufficient permissions to create trainees');
   }
 
-const body = await request.json();
+  const body = await request.json();
   const validatedData = createTraineeSchema.parse(body);
 
   // Inject tenant_id from JWT — callers cannot override this (Req 9.2)
+  // DENY BY DEFAULT: Verify all tenant references match user's tenant
 
-const { trainee: traineeRecord, temp_password } = await traineeService.createTrainee({
-  ...validatedData,
-  tenantId,
+  const { trainee: traineeRecord, temp_password } = await traineeService.createTrainee({
+    ...validatedData,
+    tenantId,
   });
 
   // Strip PII before storing in activity log (SEC-18)
 
-const { email: _e, phone: _p, birth_date: _b, street: _s, province: _pr, municipality: _m, barangay: _ba, ...safeLogData } = validatedData;
+  const { email: _e, phone: _p, birth_date: _b, street: _s, province: _pr, municipality: _m, barangay: _ba, ...safeLogData } = validatedData;
   await activityLogService.logAction(userId, 'create', 'trainee', traineeRecord.id, {
-  ...safeLogData,
-  program_id: validatedData.program_id,
+    ...safeLogData,
+    program_id: validatedData.program_id,
   }, undefined, tenantId);
 
   return successResponse({ ...traineeRecord, temp_password }, 'Trainee created successfully', 201);

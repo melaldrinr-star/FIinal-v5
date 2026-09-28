@@ -85,9 +85,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render Wrench icon for Wrench feature', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -130,9 +130,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render Award icon for Award feature', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -175,9 +175,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render Users2 icon for Users2 feature', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -220,9 +220,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render Compass icon for Compass feature', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -270,9 +270,9 @@ describe('NewLandingPage - Icon Rendering', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -345,9 +345,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render feature icons with size-6 className', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -395,9 +395,9 @@ describe('NewLandingPage - Icon Rendering', () => {
       // Arrange
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -445,9 +445,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should handle mixed known and unknown icon names', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -502,9 +502,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should handle empty or null icon names gracefully', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -563,9 +563,9 @@ describe('NewLandingPage - Icon Rendering', () => {
         }
       });
 
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -622,9 +622,9 @@ describe('NewLandingPage - Icon Rendering', () => {
       // Arrange
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -670,9 +670,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render all 4 default icons when CMS features are missing', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -708,9 +708,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should map default features to correct icons', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -748,9 +748,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render icons correctly even with delayed CMS response', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }
@@ -794,9 +794,9 @@ describe('NewLandingPage - Icon Rendering', () => {
      */
     it('should render multiple feature cards with icons without duplicates', async () => {
       // Arrange
-      let callCount = 0;
+      let _callCount = 0;
       (apiService.api.get as any).mockImplementation(async (url) => {
-        callCount++;
+        _callCount++;
         if (url === '/tenants') {
           return mockTenantsResponse;
         }

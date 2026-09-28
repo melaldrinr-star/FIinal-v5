@@ -93,7 +93,6 @@ const NAVIGATION_ARRAYS = {
     { name: 'Profile', href: '/trainee/profile', icon: User },
     { name: 'Programs', href: '/trainee/programs', icon: GraduationCap },
     { name: 'Applications', href: '/trainee/applications', icon: ClipboardList },
-    { name: 'Scan QR', href: '/scan', icon: QrCode },
   ] as NavItem[],
   superAdmin: [
     { name: 'Dashboard', href: '/super-admin', icon: ActivityIcon },
@@ -354,22 +353,8 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   }, [user?.role, hasPermission]);
 
   const mobileNavigation = useMemo(() => {
-    if (user?.role === 'trainee' || !hasPermission('canScanQR')) {
-      return filteredNavigation;
-    }
-
-    const scanItem = { name: 'Scan QR', href: '/scan', icon: QrCode };
-    const borrowingIndex = filteredNavigation.findIndex((item) => item.href === '/lendings');
-    if (borrowingIndex === -1) {
-      return [...filteredNavigation, scanItem];
-    }
-
-    return [
-      ...filteredNavigation.slice(0, borrowingIndex + 1),
-      scanItem,
-      ...filteredNavigation.slice(borrowingIndex + 1),
-    ];
-  }, [filteredNavigation, hasPermission, user?.role]);
+    return filteredNavigation;
+  }, [filteredNavigation]);
 
   const mobileMenuItems = useMemo(
     () => mobileNavigation.flatMap((item) => item.children || [item]),
@@ -561,3 +546,4 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
     </div>
   );
 }
+

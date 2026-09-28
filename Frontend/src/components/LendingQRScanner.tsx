@@ -5,12 +5,12 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Alert, AlertDescription } from './ui/alert';
 import {
-  X, Flashlight, FlashlightOff, Package, CheckCircle2,
+  X, Flashlight, FlashlightOff, CheckCircle2,
   Camera, AlertCircle, ScanLine, QrCode, Clock, Calendar,
-  Pause, Play, Keyboard, RotateCw, ArrowRight, ArrowLeft,
+  Pause, Play, Keyboard, ArrowRight, ArrowLeft,
   Info, AlertTriangle
 } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
@@ -157,7 +157,7 @@ export default function LendingQRScanner({
     }
   };
 
-  const handleCameraDeviceChange = async (deviceId: string) => {
+  const _handleCameraDeviceChange = async (deviceId: string) => {
     setSelectedDeviceId(deviceId);
     await new Promise(resolve => setTimeout(resolve, 300));
     await startCamera(deviceId);
@@ -265,7 +265,7 @@ export default function LendingQRScanner({
         const traineeSelect = document.querySelector('[data-lending-trainee-select]') as HTMLElement;
         traineeSelect?.focus();
       }, 100);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Item not found. QR code may be outdated.');
       setScannedItem(null);
     } finally {
@@ -305,7 +305,7 @@ export default function LendingQRScanner({
       setScannedLendingId(lendingId);
       setLendingInfo(lending);
       toast.info(`Ready to return: ${lending.item?.name}`);
-    } catch (err) {
+    } catch (_err) {
       toast.error('Lending record not found. Slip may be invalid.');
       setLendingInfo(null);
     } finally {
