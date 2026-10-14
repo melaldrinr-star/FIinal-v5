@@ -39,26 +39,14 @@ apiClient.interceptors.request.use(
   async (config) => {
     // Import here to avoid circular dependency
     const { getEncryptedToken } = await import('../utils/encryption');
-    const { validateTokenBinding } = await import('../utils/deviceFingerprint');
     
     // Get encrypted token from sessionStorage and decrypt
     const token = await getEncryptedToken('bmdc-auth-token');
     
     if (token) {
-      // Validate token binding (device fingerprint match)
-      const isTokenValid = await validateTokenBinding(token);
-      if (!isTokenValid) {
-        logger.warn('[API Request] Token binding validation failed - possible device change or token theft');
-        // Clear invalid token
-        const { removeEncryptedToken } = await import('../utils/encryption');
-        removeEncryptedToken('bmdc-auth-token');
-        // Don't proceed with invalid token
-        throw new Error('Token validation failed. Please log in again.');
-      }
-
       config.headers.Authorization = `Bearer ${token}`;
       if (import.meta.env.DEV) {
-        logger.debug(`[API Request] Adding Authorization header with token binding validated`);
+        logger.debug(`[API Request] Adding Authorization header`);
       }
     }
 
@@ -144,15 +132,14 @@ apiClient.interceptors.response.use(
       try {
         const response = await apiClient.post<{ data: { token: string; refreshToken: string } }>('/auth/refresh');
         
-        // Store refreshed tokens encrypted with device fingerprint binding
+        // Store refreshed tokens encrypted in sessionStorage
         // API response structure: { success, data: { token, refreshToken, user }, message }
         if (response.data.data?.token) {
           const { setEncryptedToken } = await import('../utils/encryption');
-          const { storeTokenWithFingerprint } = await import('../utils/deviceFingerprint');
           
-          await storeTokenWithFingerprint('bmdc-auth-token', response.data.data.token);
+          await setEncryptedToken('bmdc-auth-token', response.data.data.token);
           if (response.data.data.refreshToken) {
-            await storeTokenWithFingerprint('bmdc-refresh-token', response.data.data.refreshToken);
+            await setEncryptedToken('bmdc-refresh-token', response.data.data.refreshToken);
           }
         }
         

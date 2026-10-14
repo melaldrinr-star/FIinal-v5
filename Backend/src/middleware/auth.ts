@@ -5,6 +5,7 @@ import { JWTPayload } from '@/types';
 import { unauthorizedResponse } from '@/utils/responses';
 import { getAuthConfigCached } from '@/lib/config';
 import { logger } from '@/utils/logger';
+import { toISOUTC, getUTCNow } from '@/lib/timezone';
 import {
   resolveAppUserFromSupabaseIdentity,
   verifySupabaseAccessToken,
@@ -182,7 +183,45 @@ export const requireRole = (
     return authResult;
   }
 
-if (!allowedRoles.includes(authResult.user.role)) {
+  if (!allowedRoles.includes(authResult.user.role)) {
+    // Log authorization failure (Task 4.3)
+    try {
+      (async () => {
+        const { activityLogService } = await import('@/services/activityLogService');
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                   request.headers.get('x-real-ip') || undefined;
+        const userAgent = request.headers.get('user-agent') || undefined;
+        
+        // Detect if this could be an escalation attempt
+        const escalationRoles = ['admin', 'coordinator', 'supervisor', 'staff_training_coordinator', 'staff_inventory_manager', 'local_admin', 'super_admin'];
+        const userRole = authResult.user.role;
+        const isEscalationAttempt = escalationRoles.some(r => allowedRoles.includes(r)) && 
+                                    !escalationRoles.includes(userRole);
+        
+        const action = isEscalationAttempt ? 'role_escalation_attempt' : 'authz_denied';
+        
+        await activityLogService.logAction(
+          authResult.user.userId,
+          action,
+          'auth',
+          authResult.user.userId,
+          {
+            userId: authResult.user.userId,
+            userRole: userRole,
+            requiredRoles: allowedRoles,
+            timestamp: toISOUTC(getUTCNow()),
+            ip: ip,
+            userAgent: userAgent,
+            endpoint: request.nextUrl.pathname,
+          },
+          request,
+          authResult.user.tenantId
+        );
+      })();
+    } catch {
+      // Silently fail logging to avoid breaking the response
+    }
+    
     return {
       error: new Response(
         JSON.stringify({ success: false, error: 'Insufficient permissions' }),
@@ -204,7 +243,46 @@ export const requireRoleAsync = async (
     return authResult;
   }
 
-if (!allowedRoles.includes(authResult.user.role)) {
+  if (!allowedRoles.includes(authResult.user.role)) {
+    // Log authorization failure (Task 4.3)
+    try {
+      await (async () => {
+        const { activityLogService } = await import('@/services/activityLogService');
+        const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                   request.headers.get('x-real-ip') || undefined;
+        const userAgent = request.headers.get('user-agent') || undefined;
+        
+        // Detect if this could be an escalation attempt
+        const escalationRoles = ['admin', 'coordinator', 'supervisor', 'staff_training_coordinator', 'staff_inventory_manager', 'local_admin', 'super_admin'];
+        const userRole = authResult.user.role;
+        const isEscalationAttempt = escalationRoles.some(r => allowedRoles.includes(r)) && 
+                                    !escalationRoles.includes(userRole);
+        
+        const action = isEscalationAttempt ? 'role_escalation_attempt' : 'authz_denied';
+        
+        await activityLogService.logAction(
+          authResult.user.userId,
+          action,
+          'auth',
+          authResult.user.userId,
+          {
+            userId: authResult.user.userId,
+            userRole: userRole,
+            requiredRoles: allowedRoles,
+            timestamp: toISOUTC(getUTCNow()),
+            ip: ip,
+            userAgent: userAgent,
+            endpoint: request.nextUrl.pathname,
+          },
+          request,
+          authResult.user.tenantId
+        );
+      })();
+    } catch {
+      // Silently fail logging to avoid breaking the response
+      logger.debug('Failed to log authorization denial');
+    }
+    
     return {
       error: new Response(
         JSON.stringify({ success: false, error: 'Insufficient permissions' }),

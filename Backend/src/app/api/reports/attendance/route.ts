@@ -94,6 +94,7 @@ const programIds = [...new Set(sessions.map((session) => session.program_id))];
   .from('programs')
   .select('id, name')
   .in('id', programIds)
+  .is('deleted_at', null)
   .then(result => {
   // Apply tenant isolation for non-super-admins if needed
 

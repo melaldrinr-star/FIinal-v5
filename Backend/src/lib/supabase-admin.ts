@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getUTCNow } from '@/lib/timezone';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -107,7 +108,7 @@ export const adminOperations = {
    * Bulk delete activity logs older than specified days
    */
   async cleanupOldLogs(daysOld: number = 90) {
-    const cutoffDate = new Date();
+    const cutoffDate = new Date(getUTCNow().getTime());
     cutoffDate.setDate(cutoffDate.getDate() - daysOld);
     
     const { error } = await supabaseAdmin
@@ -142,7 +143,7 @@ export const adminOperations = {
   async getDatabaseStats() {
     const [users, items, programs, trainees, lendings, anomalies, logs] = await Promise.all([
       supabaseAdmin.from('users').select('id', { count: 'exact', head: true }),
-      supabaseAdmin.from('items').select('id', { count: 'exact', head: true }),
+      supabaseAdmin.from('items').select('id', { count: 'exact', head: true }).is('deleted_at', null),
       supabaseAdmin.from('programs').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('trainees').select('id', { count: 'exact', head: true }),
       supabaseAdmin.from('lendings').select('id', { count: 'exact', head: true }),

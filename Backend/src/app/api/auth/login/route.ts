@@ -30,6 +30,7 @@ import { activityLogService } from '@/services/activityLogService';
 import { handleOptionsRequest } from '@/middleware/cors';
 import { checkRateLimit, getRateLimitKey } from '@/utils/rateLimit';
 import { authRecoveryService } from '@/services/authRecoveryService';
+import { generateCsrfToken } from '@/lib/security/csrf';
 import {
   getUserTenants,
   issueTenantSelectionToken,
@@ -82,6 +83,35 @@ const { data: user, error } = await supabaseAdmin
 return unauthorizedResponse('Invalid email or password');
   }
 
+  // ── Step 1.5: Check if account is locked (Task 16) ─────────────────────
+
+  const isLocked = await authRecoveryService.isAccountLocked(user.id);
+  if (isLocked) {
+    const lockedUntil = await authRecoveryService.getLockedUntil(user.id);
+    const retryAfterSeconds = lockedUntil 
+      ? Math.ceil((lockedUntil.getTime() - Date.now()) / 1000)
+      : 0;
+    
+    const response = new NextResponse(
+      JSON.stringify({
+        success: false,
+        error: 'Account temporarily locked due to too many failed login attempts. Please try again later.',
+      }),
+      {
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSeconds),
+        },
+      }
+    );
+    
+    // Log the lockout attempt
+    await activityLogService.logAction(user.id, 'login_failed_account_locked', 'user', user.id, undefined, undefined, undefined);
+    
+    return response;
+  }
+
   // ── Step 2: Verify password ─────────────────────────────────────────────
 
 const isPasswordValid = await comparePassword(
@@ -90,8 +120,35 @@ const isPasswordValid = await comparePassword(
   );
 
   if (!isPasswordValid) {
+    // Track failed attempt
+    await authRecoveryService.trackFailedLoginAttempt(user.id);
+    
+    // Task 20.1: Log the failed login with context (IP, user agent, timestamp)
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+               request.headers.get('x-real-ip') || undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
+    
+    await activityLogService.logAction(
+      user.id,
+      'login_failed',
+      'user',
+      user.id,
+      {
+        reason: 'invalid_credentials',
+        email: validatedData.email,
+        timestamp: new Date().toISOString(),
+        ip,
+        userAgent,
+      },
+      request,
+      undefined // No tenant association yet on failed login
+    );
+
     return unauthorizedResponse('Invalid email or password');
   }
+
+  // Password is valid — reset failed attempts
+  await authRecoveryService.resetFailedLoginAttempts(user.id);
 
   // ── Step 3: Determine tenant associations (Req 6.2) ─────────────────────
 
@@ -146,12 +203,15 @@ const selectionToken = issueTenantSelectionToken(
     tenants
   );
 
+  // Generate CSRF token for this user session (Task 14.3)
+  const csrfToken = generateCsrfToken(user.id);
+
   // Log the partial authentication event
   // For tenant selection, use null/undefined as tenantId since no specific tenant is selected yet
 
 await activityLogService.logAction(user.id, 'login_tenant_selection_required', 'user', user.id, undefined, undefined, undefined);
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     success: true,
     data: {
       requires_tenant_selection: true,
@@ -170,6 +230,11 @@ await activityLogService.logAction(user.id, 'login_tenant_selection_required', '
     },
     message: 'Please select a tenant to continue',
   });
+
+  // Set CSRF token in response header (Task 14.3)
+  response.headers.set('X-CSRF-Token', csrfToken);
+
+  return response;
 });
 
 // ---------------------------------------------------------------------------
@@ -192,8 +257,27 @@ async function buildLoginResponse(
   // Issue refresh token (returned in response body, stored in session storage on frontend)
   const refresh = await authRecoveryService.issueRefreshToken(user.id, { ip, userAgent });
 
-  // Log successful login
-  await activityLogService.logAction(user.id, 'login', 'user', user.id, undefined, undefined, tenantId === 'platform' ? undefined : tenantId);
+  // Generate CSRF token for this user session (Task 14.3)
+  const csrfToken = generateCsrfToken(user.id);
+
+  // Task 20.1: Log successful login with full context
+  await activityLogService.logAction(
+    user.id,
+    'login',
+    'user',
+    user.id,
+    {
+      email: user.email,
+      role: user.role,
+      tenantId: tenantId === 'platform' ? 'platform' : tenantId,
+      timestamp: new Date().toISOString(),
+      ip,
+      userAgent,
+      status: 'success',
+    },
+    request,
+    tenantId === 'platform' ? undefined : tenantId
+  );
 
   const response = NextResponse.json({
     success: true,
@@ -211,6 +295,9 @@ async function buildLoginResponse(
     },
     message: 'Login successful',
   });
+
+  // Set CSRF token in response header (Task 14.3)
+  response.headers.set('X-CSRF-Token', csrfToken);
 
   // NOTE: NO COOKIES SET - All tokens are returned in response body for session storage
   // Frontend should store token and refreshToken in sessionStorage, not cookies

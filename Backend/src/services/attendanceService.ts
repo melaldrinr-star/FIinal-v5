@@ -17,6 +17,11 @@
  *   - getAttendanceStats         — extended with `pending` count
  */
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import {
+  getNowHHMMInPHT,
+  getPHTDateComponents,
+  calculateDateRangeInPHT,
+} from '@/lib/timezone';
 
 // ---------------------------------------------------------------------------
 // Shared interfaces
@@ -126,7 +131,7 @@ export interface SubmitAttendanceData {
 }
 
 // ---------------------------------------------------------------------------
-// Helper utilities
+// Helper utilities — All use Philippine Time (PHT, UTC+8)
 // ---------------------------------------------------------------------------
 
 /** Convert a HH:MM string into total minutes from midnight */
@@ -135,12 +140,12 @@ function timeToMinutes(hhmm: string): number {
   return h * 60 + m;
 }
 
-/** Return the current time as HH:MM string in the server's local timezone */
+/** 
+ * Return the current time as HH:MM string in Philippine Time (PHT, UTC+8)
+ * ponytail: uses getNowHHMMInPHT from timezone module
+ */
 function nowHHMM(): string {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
-  const m = String(now.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
+  return getNowHHMMInPHT();
 }
 
 /** Seconds between now and a future HH:MM time today (0 if already past) */
@@ -155,12 +160,15 @@ function secondsRemaining(hhmm: string): number {
   return secondsUntil(hhmm);
 }
 
-/** Today's date as YYYY-MM-DD (server local time) */
+/** 
+ * Today's date as YYYY-MM-DD in Philippine Time (PHT)
+ * ponytail: uses getPHTDateComponents to get PHT date
+ */
 function todayString(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const date = String(now.getDate()).padStart(2, '0');
+  const components = getPHTDateComponents(new Date());
+  const year = components.year;
+  const month = String(components.month + 1).padStart(2, '0');
+  const date = String(components.date).padStart(2, '0');
   return `${year}-${month}-${date}`;
 }
 
@@ -332,7 +340,7 @@ const { data: result, error } = await supabaseAdmin
   async bulkMarkAbsent(sessionId: string, tenantId?: string) {
     const { data: session, error: sessionError } = await supabaseAdmin
       .from('program_sessions')
-      .select('program_id')
+      .select('program_id, session_date')
       .eq('id', sessionId)
       .single();
 
@@ -357,18 +365,35 @@ const { data: result, error } = await supabaseAdmin
 
     if (attendanceError) throw attendanceError;
 
+    // ponytail: one WHERE clause guards exceptions check (upgrade: move to RLS)
+    // Query exceptions for this date and filter by trainee_id
+    let exceptionsQuery = supabaseAdmin
+      .from('attendance_exceptions')
+      .select('trainee_id')
+      .eq('exception_date', session.session_date);
+
+    if (tenantId) exceptionsQuery = exceptionsQuery.eq('tenant_id', tenantId);
+
+    const { data: exceptions, error: exceptionsError } = await exceptionsQuery;
+    if (exceptionsError) throw exceptionsError;
+
     const existingTraineeIds = new Set(
       existingAttendance?.map((a) => a.trainee_id) || []
     );
+    const exceptionTraineeIds = new Set(
+      exceptions?.map((e) => e.trainee_id) || []
+    );
 
     const absentRecords = (trainees || [])
-      .filter((t) => !existingTraineeIds.has(t.trainee_id))
+      .filter((t) => !existingTraineeIds.has(t.trainee_id) && !exceptionTraineeIds.has(t.trainee_id))
       .map((t) => ({
         session_id: sessionId,
         trainee_id: t.trainee_id,
         status: 'absent' as const,
         ...(tenantId ? { tenant_id: tenantId } : {}),
       }));
+
+    const skippedCount = (trainees || []).length - existingTraineeIds.size - absentRecords.length;
 
     if (absentRecords.length > 0) {
       const { error: insertError } = await supabaseAdmin
@@ -377,7 +402,7 @@ const { data: result, error } = await supabaseAdmin
       if (insertError) throw insertError;
     }
 
-    return { markedAbsent: absentRecords.length };
+    return { markedAbsent: absentRecords.length, skipped: skippedCount };
   }
 
   /**

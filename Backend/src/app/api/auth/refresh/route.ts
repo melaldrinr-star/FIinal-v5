@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { generateToken } from '@/lib/auth';
+import { generateToken, extractTokenFromHeader, verifyToken } from '@/lib/auth';
 import { refreshTokenSchema } from '@/utils/validators';
 import { successResponse, unauthorizedResponse } from '@/utils/responses';
 import { withErrorHandler } from '@/middleware/errorHandler';
 import { handleOptionsRequest } from '@/middleware/cors';
 import { checkRateLimit, getRateLimitKey } from '@/utils/rateLimit';
 import { authRecoveryService } from '@/services/authRecoveryService';
+import { logger } from '@/utils/logger';
+import { activityLogService } from '@/services/activityLogService';
 
 // OPTIONS /api/auth/refresh - Handle CORS preflight
 export async function OPTIONS(request: NextRequest) {
@@ -57,6 +59,77 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
 
   if (error || !user) {
     return unauthorizedResponse('User not found');
+  }
+
+  // Check role immutability - prevent privilege escalation (Req 6.3)
+  const authHeader = request.headers.get('authorization');
+  const oldToken = extractTokenFromHeader(authHeader ?? undefined);
+  const decoded = oldToken ? verifyToken(oldToken) : null;
+  if (decoded && decoded.role !== user.role) {
+    logger.warn('Role mismatch detected in token refresh', { userId: user.id, oldRole: decoded.role, newRole: user.role });
+    
+    // Task 20.2: Log role mismatch attempt as potential escalation
+    try {
+      // Determine if this is an escalation attempt
+      const escalationRoles = ['admin', 'coordinator', 'supervisor', 'staff_training_coordinator', 'staff_inventory_manager', 'local_admin', 'super_admin'];
+      const isEscalationAttempt = escalationRoles.includes(user.role) && !escalationRoles.includes(decoded.role);
+      
+      const action = isEscalationAttempt ? 'role_escalation_attempt' : 'role_mismatch';
+      
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                 request.headers.get('x-real-ip') || undefined;
+      const userAgent = request.headers.get('user-agent') || undefined;
+      
+      await activityLogService.logAction(
+        user.id,
+        action,
+        'auth',
+        user.id,
+        {
+          userId: user.id,
+          oldRole: decoded.role,
+          newRole: user.role,
+          timestamp: new Date().toISOString(),
+          ip: ip,
+          userAgent: userAgent,
+          reason: isEscalationAttempt ? 'Attempted privilege escalation' : 'Role changed between tokens',
+          status: 'failure',
+        },
+        request,
+        user.tenant_id
+      );
+    } catch (logError) {
+      logger.error('Failed to log role mismatch attempt', { error: String(logError), userId: user.id });
+    }
+    
+    return unauthorizedResponse('Token refresh failed: role changed');
+  }
+
+  // Task 20.2: Log successful token refresh with role verification
+  try {
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+               request.headers.get('x-real-ip') || undefined;
+    const userAgent = request.headers.get('user-agent') || undefined;
+    
+    await activityLogService.logAction(
+      user.id,
+      'token_refreshed',
+      'auth',
+      user.id,
+      {
+        userId: user.id,
+        role: user.role,
+        roleVerified: true,
+        timestamp: new Date().toISOString(),
+        ip,
+        userAgent,
+        status: 'success',
+      },
+      request,
+      user.tenant_id
+    );
+  } catch (logError) {
+    logger.debug('Failed to log token refresh', { error: String(logError), userId: user.id });
   }
 
   const token = generateToken({ userId: user.id, email: user.email, role: user.role, tenantId: user.tenant_id });

@@ -239,9 +239,11 @@ let tenantName = 'LGU Training Center';
 
 if (report.affectedTraineeIds && report.affectedTraineeIds.length > 0) {
     try {
+      // ponytail: Add tenant_id filter to prevent cross-tenant data breach notifications
       const { data: trainees } = await supabaseAdmin
         .from('trainees')
         .select('id, first_name, last_name, email')
+        .eq('tenant_id', report.tenantId) // RLS: Filter by tenant to prevent cross-tenant notification
         .in('id', report.affectedTraineeIds)
         .not('email', 'like', '%@deleted.invalid'); // Skip anonymized records
 

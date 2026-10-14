@@ -22,7 +22,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   // FIX: Query enrollments instead of trainees.program_id (removed in schema normalization)
   const [traineesResult, programsResult, enrollmentsResult] = await Promise.all([
     supabaseAdmin.from('trainees').select('id, status').eq('tenant_id', tenantId),
-    supabaseAdmin.from('programs').select('id, name').eq('tenant_id', tenantId),
+    supabaseAdmin.from('programs').select('id, name').eq('tenant_id', tenantId).is('deleted_at', null),
     supabaseAdmin
       .from('enrollments')
       .select('trainee_id, program_id')

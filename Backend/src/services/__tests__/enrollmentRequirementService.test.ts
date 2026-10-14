@@ -7,7 +7,6 @@
  * - Requirement applicability evaluation with trainee profile data
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   evaluateApplicabilityRules,
   initializeEnrollmentRequirements,
@@ -20,16 +19,16 @@ import {
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Mock supabaseAdmin
-vi.mock('@/lib/supabase-admin', () => ({
+jest.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: {
-    from: vi.fn(),
-    rpc: vi.fn(),
+    from: jest.fn(),
+    rpc: jest.fn(),
   },
 }));
 
 describe('enrollmentRequirementService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   // ============================================================================
@@ -183,20 +182,20 @@ describe('enrollmentRequirementService', () => {
 
       // Mock supabaseAdmin calls
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({ data: mockTraineeProfile, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({ data: mockTraineeProfile, error: null }),
       };
 
       const mockSelectChain2 = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({ data: mockRequirements, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
+        order: jest.fn().mockResolvedValue({ data: mockRequirements, error: null }),
       };
 
       const mockInsertChain = {
-        insert: vi.fn().mockReturnThis(),
-        select: vi.fn().mockResolvedValue({ data: [], error: null }),
+        insert: jest.fn().mockReturnThis(),
+        select: jest.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       (supabaseAdmin.from as any)
@@ -246,20 +245,20 @@ describe('enrollmentRequirementService', () => {
       ];
 
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
       };
 
       const mockSelectChain2 = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({ data: mockRequirements, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
+        order: jest.fn().mockResolvedValue({ data: mockRequirements, error: null }),
       };
 
       const mockInsertChain = {
-        insert: vi.fn().mockReturnThis(),
-        select: vi.fn().mockResolvedValue({ data: [], error: null }),
+        insert: jest.fn().mockReturnThis(),
+        select: jest.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       (supabaseAdmin.from as any)
@@ -284,8 +283,8 @@ describe('enrollmentRequirementService', () => {
       const tenantId = 'tenant-001';
 
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
         maybeSingle: vi
           .fn()
           .mockResolvedValue({ data: null, error: { message: 'Database error' } }),
@@ -304,15 +303,15 @@ describe('enrollmentRequirementService', () => {
       const tenantId = 'tenant-001';
 
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'profile-001' }, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({ data: { id: 'profile-001' }, error: null }),
       };
 
       const mockSelectChain2 = {
-        eq: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        order: vi.fn().mockResolvedValue({ data: null, error: { message: 'Query error' } }),
+        eq: jest.fn().mockReturnThis(),
+        is: jest.fn().mockReturnThis(),
+        order: jest.fn().mockResolvedValue({ data: null, error: { message: 'Query error' } }),
       };
 
       (supabaseAdmin.from as any)
@@ -368,27 +367,27 @@ describe('enrollmentRequirementService', () => {
       ];
 
       const mockSelectChain1 = {
-        eq: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockResolvedValue({ data: mockTraineeProfile, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        maybeSingle: jest.fn().mockResolvedValue({ data: mockTraineeProfile, error: null }),
       };
 
       const mockSelectChain2 = {
-        eq: vi.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
         select: vi
           .fn()
           .mockResolvedValue({ data: mockEnrollments, error: null }),
       };
 
       const mockSelectChain3 = {
-        eq: vi.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
         select: vi
           .fn()
           .mockResolvedValue({ data: mockEnrollmentReqs, error: null }),
       };
 
       const mockUpdateChain = {
-        eq: vi.fn().mockReturnThis(),
-        update: vi.fn().mockResolvedValue({ data: null, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        update: jest.fn().mockResolvedValue({ data: null, error: null }),
       };
 
       (supabaseAdmin.from as any)
@@ -430,9 +429,9 @@ describe('enrollmentRequirementService', () => {
       ];
 
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        select: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-        order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+        eq: jest.fn().mockReturnThis(),
+        select: jest.fn().mockResolvedValue({ data: mockData, error: null }),
+        order: jest.fn().mockResolvedValue({ data: mockData, error: null }),
       };
 
       (supabaseAdmin.from as any).mockReturnValueOnce(mockSelectChain);
@@ -455,9 +454,9 @@ describe('enrollmentRequirementService', () => {
       const enrollmentId = 'enrollment-001';
 
       const mockSelectChain = {
-        eq: vi.fn().mockReturnThis(),
-        select: vi.fn().mockResolvedValue({ data: [], error: null }),
-        order: vi.fn().mockResolvedValue({ data: [], error: null }),
+        eq: jest.fn().mockReturnThis(),
+        select: jest.fn().mockResolvedValue({ data: [], error: null }),
+        order: jest.fn().mockResolvedValue({ data: [], error: null }),
       };
 
       (supabaseAdmin.from as any).mockReturnValueOnce(mockSelectChain);
@@ -471,3 +470,4 @@ describe('enrollmentRequirementService', () => {
     });
   });
 });
+

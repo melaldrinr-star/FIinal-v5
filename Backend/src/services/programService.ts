@@ -91,6 +91,7 @@ export class ProgramService {
     status?: string;
     search?: string;
     tenantId?: string;
+    includeDeleted?: boolean;
   }): Promise<Program[]> {
     let query = supabaseAdmin
       .from('programs')
@@ -100,6 +101,11 @@ export class ProgramService {
 
 if (filters?.tenantId) {
       query = query.eq('tenant_id', filters.tenantId);
+    }
+
+    // Filter out soft-deleted items by default (exclude where deleted_at IS NOT NULL)
+    if (!filters?.includeDeleted) {
+      query = query.is('deleted_at', null);
     }
 
 if (filters?.status) {
@@ -124,7 +130,8 @@ if (filters?.search) {
     let query = supabaseAdmin
       .from('programs')
       .select('*')
-      .eq('id', id);
+      .eq('id', id)
+      .is('deleted_at', null); // Filter out soft-deleted programs
 
     // Tenant isolation — only return the program if it belongs to this tenant (Req 7.8)
     if (tenantId) {
@@ -232,11 +239,17 @@ const imageWasUpdated = Object.prototype.hasOwnProperty.call(programData, 'image
 
   async deleteProgram(id: string): Promise<void> {
     const existingProgram = await this.getProgramById(id);
-    await db.delete('programs', id);
-
-    if (existingProgram?.image_path) {
-      await deleteImageWithThumbnail(existingProgram.image_path);
+    if (!existingProgram) {
+      throw new Error('Program not found');
     }
+
+    // Soft delete: set deleted_at timestamp instead of hard delete
+    await db.update<Program>('programs', id, {
+      deleted_at: new Date().toISOString(),
+    });
+
+    // Note: Images are retained for archival purposes; they're not deleted during soft delete
+    // Images are only deleted on permanent purge from the archive
   }
 
   private calculateProgramStatus(

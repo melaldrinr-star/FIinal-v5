@@ -780,13 +780,20 @@ await supabaseAdmin.from('audit_logs').insert({
 
 /**
  * Get batch job status and statistics.
+ * Filters by tenant_id to prevent cross-tenant access to batch jobs.
  */
-export async function getBatchJobStatus(jobId: string): Promise<BatchStats | null> {
-  const { data, error } = await supabaseAdmin
+export async function getBatchJobStatus(jobId: string, tenantId?: string | null): Promise<BatchStats | null> {
+  let query = supabaseAdmin
     .from('email_batch_jobs')
     .select('*')
-    .eq('id', jobId)
-    .single();
+    .eq('id', jobId);
+
+  // ponytail: Add tenant_id filter for RLS when tenantId is provided
+  if (tenantId) {
+    query = query.eq('tenant_id', tenantId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error) {
     logger.warn('[BATCH] Failed to fetch batch job status', { jobId, error });

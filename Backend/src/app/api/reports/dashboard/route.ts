@@ -44,7 +44,7 @@ const [
       if (endDateExclusive) query = query.lt('created_at', endDateExclusive.toISOString());
       return query;
     })(),
-    supabaseAdmin.from('items').select('quantity, available_quantity, status').eq('tenant_id', tenantId),
+    supabaseAdmin.from('items').select('quantity, available_quantity, status').eq('tenant_id', tenantId).is('deleted_at', null),
     (() => {
       let query = supabaseAdmin
         .from('lendings')

@@ -16,6 +16,7 @@ import { withErrorHandler } from '@/middleware/errorHandler';
 import { activityLogService } from '@/services/activityLogService';
 import { handleOptionsRequest } from '@/middleware/cors';
 import { requireFeature, FeatureKey } from '@/lib/featureFlags';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { z } from 'zod';
 
 // Validation schemas
@@ -47,12 +48,7 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
 const ctxResult = requireTenantContext(request);
   if (ctxResult.error) return ctxResult.error as NextResponse;
 
-  const { tenantId, role, isSuperAdmin } = ctxResult.context;
-
-  const allowedRoles = ['local_admin', 'staff_training_coordinator', 'staff_inventory_manager'];
-  if (!allowedRoles.includes(role)) {
-    return forbiddenResponse('Insufficient permissions to view attendance records');
-  }
+  const { tenantId, role, userId, isSuperAdmin } = ctxResult.context;
 
 const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get('session_id');
@@ -61,6 +57,49 @@ const { searchParams } = new URL(request.url);
   const stats = searchParams.get('stats');
   const dashboard = searchParams.get('dashboard');
   const dateFilter = searchParams.get('date');
+
+  // ponytail: simple boundary check (upgrade: move to RLS)
+  // For trainee role: prevent accessing other trainees' data
+  // For staff roles: verify tenant match is enforced in service layer
+  if (role === 'trainee') {
+    // Trainees can only query their own trainee_id
+    if (!traineeId) {
+      return errorResponse('Trainee must specify trainee_id parameter', 400);
+    }
+    
+    // Validate trainee_id is a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(traineeId)) {
+      return errorResponse('Invalid trainee_id format: must be a valid UUID', 400);
+    }
+    
+    const { data: traineeAccount } = await supabaseAdmin
+      .from('trainee_accounts')
+      .select('trainee_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    const authenticatedTraineeId = traineeAccount?.trainee_id;
+    if (!authenticatedTraineeId) {
+      return forbiddenResponse('Trainee record not found');
+    }
+    if (traineeId !== authenticatedTraineeId) {
+      await activityLogService.logAction(
+        userId,
+        'denied_access',
+        'attendance',
+        traineeId,
+        { reason: 'Attempted to access another trainee\'s records', traineeId }
+      );
+      return forbiddenResponse('Cannot view other trainees\' data');
+    }
+  } else {
+    // Staff roles must have appropriate permissions
+    const allowedRoles = ['local_admin', 'staff_training_coordinator', 'staff_inventory_manager'];
+    if (!allowedRoles.includes(role)) {
+      return forbiddenResponse('Insufficient permissions to view attendance records');
+    }
+  }
 
   // Admin dashboard summary (attendance module)
 
@@ -166,7 +205,7 @@ if (action === 'bulk_absent') {
       'bulk_mark_absent',
       'attendance',
       validatedData.session_id,
-      { session_id: validatedData.session_id, count: result.markedAbsent, tenantId }
+      { session_id: validatedData.session_id, count: result.markedAbsent, skipped: result.skipped, tenantId }
     );
     return successResponse(result, `Marked ${result.markedAbsent} trainees as absent`);
   }

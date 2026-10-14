@@ -401,9 +401,9 @@ describe('Preservation Tests: Non-PATCH Operations (Task 2)', () => {
           expect(typeof enrollment.enrollment_date).toBe('string');
 
           // Verify UUIDs are valid format
-          expect(enrollment.id).toMatch(/^[a-z0-9\-]+$/i);
-          expect(enrollment.trainee_id).toMatch(/^[a-z0-9\-]+$/i);
-          expect(enrollment.program_id).toMatch(/^[a-z0-9\-]+$/i);
+          expect(enrollment.id).toMatch(/^[a-z0-9-]+$/i);
+          expect(enrollment.trainee_id).toMatch(/^[a-z0-9-]+$/i);
+          expect(enrollment.program_id).toMatch(/^[a-z0-9-]+$/i);
         }),
         { numRuns: 50 }
       );

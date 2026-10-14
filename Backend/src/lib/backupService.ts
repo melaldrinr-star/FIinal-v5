@@ -153,7 +153,7 @@ async function collectAllTenantData(): Promise<{
     supabaseAdmin.from('trainees').select('id, tenant_id, status, consent_given, consent_version, created_at, updated_at').order('created_at'),
     supabaseAdmin.from('enrollments').select('*').order('created_at'),
     supabaseAdmin.from('attendance').select('*').order('created_at'),
-    supabaseAdmin.from('items').select('*').order('created_at'),
+    supabaseAdmin.from('items').select('*').is('deleted_at', null).order('created_at'),
     supabaseAdmin.from('certificates').select('*').order('created_at'),
     supabaseAdmin.from('feature_flags').select('*').order('created_at'),
     // Only last 1000 audit log entries in backup (full logs are in Supabase PITR)

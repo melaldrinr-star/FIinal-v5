@@ -372,45 +372,45 @@ export function mergeWithDefaults(
     ...customizations,
     colors: {
       ...DEFAULT_CUSTOMIZATIONS.colors,
-      ...(customizations.colors || {}),
+      ...customizations.colors,
     },
     typography: {
       ...DEFAULT_CUSTOMIZATIONS.typography,
       headings: {
         ...DEFAULT_CUSTOMIZATIONS.typography?.headings,
-        ...(customizations.typography?.headings || {}),
+        ...customizations.typography?.headings,
       },
       body: {
         ...DEFAULT_CUSTOMIZATIONS.typography?.body,
-        ...(customizations.typography?.body || {}),
+        ...customizations.typography?.body,
       },
     },
     layout: {
       ...DEFAULT_CUSTOMIZATIONS.layout,
-      ...(customizations.layout || {}),
+      ...customizations.layout,
       padding: {
         ...DEFAULT_CUSTOMIZATIONS.layout?.padding,
-        ...(customizations.layout?.padding || {}),
+        ...customizations.layout?.padding,
       },
       margins: {
         ...DEFAULT_CUSTOMIZATIONS.layout?.margins,
-        ...(customizations.layout?.margins || {}),
+        ...customizations.layout?.margins,
       },
       gaps: {
         ...DEFAULT_CUSTOMIZATIONS.layout?.gaps,
-        ...(customizations.layout?.gaps || {}),
+        ...customizations.layout?.gaps,
       },
     },
     components: {
       ...DEFAULT_CUSTOMIZATIONS.components,
-      ...(customizations.components || {}),
+      ...customizations.components,
     },
     content: {
       ...DEFAULT_CUSTOMIZATIONS.content,
-      ...(customizations.content || {}),
+      ...customizations.content,
       contact: {
         ...DEFAULT_CUSTOMIZATIONS.content?.contact,
-        ...(customizations.content?.contact || {}),
+        ...customizations.content?.contact,
       },
     },
   };

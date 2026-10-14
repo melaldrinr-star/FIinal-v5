@@ -128,6 +128,7 @@ export const POST = withErrorHandler(
         .select('id, tenant_id, name, status, enrollment_limit')
         .eq('id', programId)
         .eq('tenant_id', tenantId)
+        .is('deleted_at', null)
         .maybeSingle();
 
       if (programError) throw programError;

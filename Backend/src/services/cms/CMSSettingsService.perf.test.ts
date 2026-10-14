@@ -10,7 +10,7 @@
  * Validates Requirement 7.2: Visual Preview and Real-time Updates
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+
 import { CMSSettingsService } from './CMSSettingsService';
 import * as db from '../../lib/db';
 
@@ -470,3 +470,4 @@ describe('CMSSettingsService Performance Tests', () => {
     expect(validation.valid).toBe(true);
   });
 });
+

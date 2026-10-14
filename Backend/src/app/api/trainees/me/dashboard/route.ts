@@ -87,7 +87,7 @@ if (!traineeData) {
 const [programResult, attendanceResult, sessionsResult, excludedDatesResult] = await Promise.all([
   // Get program details if enrolled
   programId
-  ? supabaseAdmin.from('programs').select('*').eq('id', programId).single()
+  ? supabaseAdmin.from('programs').select('*').eq('id', programId).is('deleted_at', null).single()
   : Promise.resolve({ data: null, error: null }),
 
   // Get all attendance records with session dates for stats calculation

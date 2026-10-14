@@ -29,6 +29,7 @@ import { UPLOAD_BASE_DIR, validateTenantId } from '@/lib/fileStorage';
 import { withErrorHandler } from '@/middleware/errorHandler';
 import { forbiddenResponse, notFoundResponse } from '@/utils/responses';
 import { logger } from '@/utils/logger';
+import { maybeDecrypt } from '@/lib/fileEncryption';
 
 // ---------------------------------------------------------------------------
 // MIME type map
@@ -145,6 +146,14 @@ let fileBuffer: Buffer;
           timestamp: new Date().toISOString(), });
         return notFoundResponse('File not found'); }
       throw err; }
+
+    // ── 7b. Task 10.4: Decrypt selfie images if encrypted ────────────────────
+    // Selfies stored in /uploads/{tenant_id}/images/attendance/ are encrypted
+    // if FILE_ENCRYPTION_ENABLED is true. Decrypt them on retrieval.
+    const isAttendanceSelfie = rest[0] === 'images' && rest[1] === 'attendance';
+    if (isAttendanceSelfie) {
+      fileBuffer = maybeDecrypt(fileBuffer);
+    }
 
     // ── 8. Log successful access (Req 15.7) ───────────────────────────────────
     logger.info('[FILE_ACCESS] File served', { userId: userId || 'public',

@@ -47,10 +47,16 @@ describe('Tenant Isolation - Comprehensive Tests (Requirements 2.1, 2.3, 2.4, 2.
   // Test data generators
   const tenantIdArb = fc.uuid().map(id => id);
   const adminIdArb = fc.uuid().map(id => id);
+  const hexColorArb = fc.tuple(
+    fc.integer({ min: 0, max: 255 }),
+    fc.integer({ min: 0, max: 255 }),
+    fc.integer({ min: 0, max: 255 })
+  ).map(([r, g, b]) => `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`);
+  
   const settingsArb = fc.object({
     colors: fc.object({
-      primary: fc.hexaString({ minLength: 7, maxLength: 7 }),
-      secondary: fc.hexaString({ minLength: 7, maxLength: 7 }),
+      primary: hexColorArb,
+      secondary: hexColorArb,
     }),
   });
 

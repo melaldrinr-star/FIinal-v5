@@ -463,7 +463,7 @@ export default function TraineeFormPage() {
 
         if (!formData.contactNumber.trim()) {
           errors.contactNumber = 'Contact number is required';
-        } else if (!/^09\d{9}$/.test(formData.contactNumber.replace(/[\s\-]/g, ''))) {
+        } else if (!/^09\d{9}$/.test(formData.contactNumber.replace(/[\s-]/g, ''))) {
           errors.contactNumber = 'Contact number must be in format 09XXXXXXXXX (11 digits)';
         }
 
@@ -1810,59 +1810,49 @@ export default function TraineeFormPage() {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pb-20 sm:pb-4">
-          {/* Left: Step Indicator */}
-          <div className="text-xs sm:text-sm text-muted-foreground text-center order-2 sm:order-1">
-            Step {currentStep} of {steps.length}
-          </div>
-
-          {/* Right: Previous, Next/Save, Cancel */}
-          <div className="flex gap-2 order-1 sm:order-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/trainees')}
+            >
+              <X className="mr-2 size-4" />
+              Cancel
+            </Button>
             <Button
               variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
-              className="w-full sm:w-auto text-xs sm:text-sm"
             >
-              <ChevronLeft className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
+              <ChevronLeft className="mr-2 size-4" />
               Previous
             </Button>
-            
-            {currentStep < steps.length ? (
-              <Button type="button" onClick={nextStep} className="w-full sm:w-auto text-xs sm:text-sm">
-                Next
-                <ChevronRight className="ml-1.5 sm:ml-2 size-3.5 sm:size-4" />
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading || isVerifying}
-                className="w-full sm:w-auto text-xs sm:text-sm"
-              >
-                {loading || isVerifying ? (
-                  <span className="flex items-center gap-2">
-                    <span className="size-3.5 sm:size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    {loading ? (id ? 'Updating...' : 'Saving...') : 'Verifying...'}
-                  </span>
-                ) : (
-                  <>
-                    <Save className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
-                    {id ? 'Update Trainee' : 'Save Trainee'}
-                  </>
-                )}
-              </Button>
-            )}
-
-            <Button
-              variant="outline"
-              onClick={() => navigate('/trainees')}
-              className="w-full sm:w-auto text-xs sm:text-sm"
-            >
-              <X className="mr-1.5 sm:mr-2 size-3.5 sm:size-4" />
-              Cancel
-            </Button>
           </div>
+          
+          <div className="text-sm text-muted-foreground">
+            Step {currentStep} of {steps.length}
+          </div>
+
+          {currentStep < steps.length ? (
+            <Button onClick={nextStep}>
+              Next
+              <ChevronRight className="ml-2 size-4" />
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit} disabled={loading || isVerifying}>
+              {loading || isVerifying ? (
+                <span className="flex items-center gap-2">
+                  <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  {loading ? (id ? 'Updating...' : 'Saving...') : 'Verifying...'}
+                </span>
+              ) : (
+                <>
+                  <Save className="mr-2 size-4" />
+                  {id ? 'Update Trainee' : 'Save Trainee'}
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </DashboardLayout>

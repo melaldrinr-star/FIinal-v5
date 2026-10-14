@@ -220,7 +220,8 @@ export async function getTrainingSummary(
 let programsQuery = supabaseAdmin
     .from('programs')
     .select('id, name, status, max_trainees, start_date, end_date')
-    .eq('tenant_id', tenantId);
+    .eq('tenant_id', tenantId)
+    .is('deleted_at', null);
   if (filter.startDate) programsQuery = programsQuery.gte('start_date', filter.startDate);
   if (filter.endDate)   programsQuery = programsQuery.lte('end_date', filter.endDate);
   const { data: programs, error: pErr } = await programsQuery.order('start_date', { ascending: false });
@@ -457,10 +458,10 @@ async function fetchTenantSummary(
   filter: DateRangeFilter
 ): Promise<TenantSummary> {
   const [programs, enrollments, trainees, items, certs] = await Promise.all([
-    supabaseAdmin.from('programs').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+    supabaseAdmin.from('programs').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).is('deleted_at', null),
     supabaseAdmin.from('enrollments').select('id, status', { count: 'exact' }).eq('tenant_id', tenantId),
     supabaseAdmin.from('trainees').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-    supabaseAdmin.from('items').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+    supabaseAdmin.from('items').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).is('deleted_at', null),
     supabaseAdmin.from('certificates').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
   ]);
 

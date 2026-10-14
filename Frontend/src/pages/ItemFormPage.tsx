@@ -209,6 +209,7 @@ export default function ItemFormPage() {
     try {
       // Upload image if needed
       const imagePath = await uploadImageIfNeeded();
+      logger.info('[ItemFormPage] Image upload complete', { imagePath, imageFile: !!imageFile });
       
       // Format purchase date properly - only include if valid
       const purchaseDate = formData.purchaseDate 
@@ -227,12 +228,24 @@ export default function ItemFormPage() {
         image_path:     imagePath || null,
       };
 
+      logger.info('[ItemFormPage] Submitting payload', {
+        mode: id ? 'update' : 'create',
+        payload,
+      });
+
       let savedItem: any;
       if (id) {
+        logger.info('[ItemFormPage] Updating item', { id });
         savedItem = await inventoryService.updateInventoryItem(id, payload);
       } else {
+        logger.info('[ItemFormPage] Creating new item');
         savedItem = await inventoryService.createInventoryItem(payload);
       }
+
+      logger.info('[ItemFormPage] Item saved successfully', {
+        savedItem,
+        savedImagePath: savedItem?.image_path,
+      });
 
       // Generate QR, upload it, then patch the item with qr_code_path
       const savedId = savedItem?.id ?? id;
@@ -240,6 +253,7 @@ export default function ItemFormPage() {
         try {
           const qrPath = await generateAndUploadQR(savedId, formData.name, formData.category);
           if (qrPath) {
+            logger.info('[ItemFormPage] Updating item with QR code path', { qrPath });
             await inventoryService.updateInventoryItem(String(savedId), { qr_code_path: qrPath } as any);
           } else {
             logger.warn('QR code path was empty after upload', { savedId });
@@ -286,23 +300,53 @@ export default function ItemFormPage() {
   const uploadImageIfNeeded = async (): Promise<string> => {
     if (!imageFile) {
       // No new file selected — return the original relative path from DB (safe to re-store)
+      logger.info('[ItemFormPage] No new image file, using existing path', { existingImagePath });
       return existingImagePath;
     }
     try {
       const base64 = await toBase64(imageFile);
+      logger.info('[ItemFormPage] Uploading image', { 
+        filename: imageFile.name,
+        size: imageFile.size,
+        base64Length: base64.length,
+      });
+
       const response = await api.post('/upload/tenant', {
         file: base64,
         category: 'images/items',
         filename: imageFile.name,
         prefix: `item_${id || 'new'}`,
       });
-      if (response.success && response.data?.filePath) {
-        return response.data.filePath;
+
+      logger.info('[ItemFormPage] Upload response received', {
+        success: response.success,
+        hasData: !!response.data,
+        dataKeys: response.data ? Object.keys(response.data) : [],
+        filePath: response.data?.filePath,
+        error: response.error,
+      });
+
+      if (!response.success) {
+        logger.error('[ItemFormPage] Image upload failed - response.success is false', {
+          response,
+        });
+        toast.error(`Image upload failed: ${response.error || 'Unknown error'}`);
+        return '';
       }
-      toast.error('Image upload failed');
-      return '';
-    } catch {
-      toast.error('Image upload error');
+
+      if (!response.data?.filePath) {
+        logger.error('[ItemFormPage] Image upload response missing filePath', {
+          response,
+        });
+        toast.error('Image upload failed - no file path returned');
+        return '';
+      }
+      
+      logger.info('[ItemFormPage] Image uploaded successfully', { filePath: response.data.filePath });
+      return response.data.filePath;
+    } catch (error) {
+      logger.error('[ItemFormPage] Image upload exception', { error, message: (error as any)?.message });
+      toast.error(`Image upload error: ${(error as any)?.message || 'Unknown error'}`);
       return '';
     }
   };

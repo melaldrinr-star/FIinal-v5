@@ -151,30 +151,30 @@ export default function AdminCustomizationPanel({ onSaveSuccess, onError }: Admi
     
     return {
       // New comprehensive structure fields
-      colors: { ...defaults.colors, ...(saved?.colors || {}) },
+      colors: { ...defaults.colors, ...saved?.colors },
       typography: { 
         ...defaults.typography,
-        headings: { ...defaults.typography?.headings, ...(saved?.typography?.headings || {}) },
-        body: { ...defaults.typography?.body, ...(saved?.typography?.body || {}) },
+        headings: { ...defaults.typography?.headings, ...saved?.typography?.headings },
+        body: { ...defaults.typography?.body, ...saved?.typography?.body },
       },
       layout: { 
         ...defaults.layout,
-        padding: { ...defaults.layout?.padding, ...(saved?.layout?.padding || {}) },
-        margins: { ...defaults.layout?.margins, ...(saved?.layout?.margins || {}) },
-        gaps: { ...defaults.layout?.gaps, ...(saved?.layout?.gaps || {}) },
+        padding: { ...defaults.layout?.padding, ...saved?.layout?.padding },
+        margins: { ...defaults.layout?.margins, ...saved?.layout?.margins },
+        gaps: { ...defaults.layout?.gaps, ...saved?.layout?.gaps },
       },
-      components: { ...defaults.components, ...(saved?.components || {}) },
+      components: { ...defaults.components, ...saved?.components },
       content: {
         ...defaults.content,
-        contact: { ...defaults.content?.contact, ...(saved?.content?.contact || {}) },
+        contact: { ...defaults.content?.contact, ...saved?.content?.contact },
       },
       // Backward compatibility fields
-      hero: { ...defaults.hero, ...(saved?.hero || {}) },
-      appearance: { ...defaults.appearance, ...(saved?.appearance || {}) },
+      hero: { ...defaults.hero, ...saved?.hero },
+      appearance: { ...defaults.appearance, ...saved?.appearance },
       mission: saved?.mission || defaults.mission,
       vision: saved?.vision || defaults.vision,
-      contact: { ...defaults.contact, ...(saved?.contact || {}) },
-      footer: { ...defaults.footer, ...(saved?.footer || {}) },
+      contact: { ...defaults.contact, ...saved?.contact },
+      footer: { ...defaults.footer, ...saved?.footer },
     };
   };
 

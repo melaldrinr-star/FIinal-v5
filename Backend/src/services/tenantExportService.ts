@@ -179,6 +179,7 @@ async function fetchPrograms(tenantId: string) {
     .from('programs')
     .select('*')
     .eq('tenant_id', tenantId)
+    .is('deleted_at', null)
     .order('created_at');
   if (error) throw error;
   return data ?? [];

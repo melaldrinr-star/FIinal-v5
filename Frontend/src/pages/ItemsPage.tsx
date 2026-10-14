@@ -530,6 +530,7 @@ export default function ItemsPage() {
         item={selectedItem}
         onEdit={handleEditItem}
         onViewQR={handleViewQR}
+        onDelete={fetchItems}
         canEdit={hasPermission('canManageItems')}
       />
     </DashboardLayout>

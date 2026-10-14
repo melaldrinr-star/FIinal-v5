@@ -485,13 +485,13 @@ export default function ProgramsPage() {
             <AlertDialogHeader>
               <AlertDialogTitle className="text-base sm:text-lg">Delete Program?</AlertDialogTitle>
               <AlertDialogDescription className="text-xs sm:text-sm">
-                Are you sure you want to delete "{selectedProgram?.name}"? This action cannot be undone.
+                Are you sure you want to delete "{selectedProgram?.name}"? The program will be moved to the archive and can be restored later from the Archive page.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-2">
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Delete
+                Delete to Archive
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

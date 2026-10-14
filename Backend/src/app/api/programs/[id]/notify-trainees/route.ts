@@ -229,7 +229,7 @@ export async function GET(
 
   logger.info('[PROGRAM_NOTIFY] Getting batch job status', { jobId });
 
-  const batchStatus = await getBatchJobStatus(jobId);
+  const batchStatus = await getBatchJobStatus(jobId, context.tenantId);
 
   if (!batchStatus) { return NextResponse.json(
   { error: 'Batch job not found' },

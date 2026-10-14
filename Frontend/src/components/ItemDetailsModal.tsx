@@ -1,7 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Package, MapPin, Calendar, CheckCircle2, Edit, QrCode } from 'lucide-react';
+import { Package, MapPin, Calendar, CheckCircle2, Edit, QrCode, Trash2 } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from './ui/alert-dialog';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import inventoryService from '../services/inventoryService';
 
 interface Item {
   id: string;
@@ -22,6 +35,7 @@ interface ItemDetailsModalProps {
   item: Item | null;
   onEdit?: (item: Item) => void;
   onViewQR?: (item: Item) => void;
+  onDelete?: () => void;
   canEdit?: boolean;
 }
 
@@ -31,14 +45,33 @@ export default function ItemDetailsModal({
   item,
   onEdit,
   onViewQR,
+  onDelete,
   canEdit = false 
 }: ItemDetailsModalProps) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (!item) return null;
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await inventoryService.deleteInventoryItem(item.id);
+      toast.success('Item deleted successfully and moved to archive');
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      if (onDelete) onDelete();
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to delete item');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -149,19 +182,47 @@ export default function ItemDetailsModal({
             View QR Code
           </Button>
           {canEdit && (
-            <Button 
-              variant="default" 
-              className="w-full text-sm h-10"
-              onClick={() => {
-                if (onEdit) onEdit(item);
-                onOpenChange(false);
-              }}
-            >
-              <Edit className="mr-2 size-4" />
-              Edit Item
-            </Button>
+            <>
+              <Button 
+                variant="default" 
+                className="w-full text-sm h-10"
+                onClick={() => {
+                  if (onEdit) onEdit(item);
+                  onOpenChange(false);
+                }}
+              >
+                <Edit className="mr-2 size-4" />
+                Edit Item
+              </Button>
+              <Button 
+                variant="destructive" 
+                className="w-full text-sm h-10"
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 size-4" />
+                Delete Item
+              </Button>
+            </>
           )}
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent className="w-[92vw] max-w-sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-base sm:text-lg">Delete Item?</AlertDialogTitle>
+              <AlertDialogDescription className="text-xs sm:text-sm">
+                Are you sure you want to delete "{item.name}"? The item will be moved to the archive and can be restored later from the Archive page.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="gap-2">
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {isDeleting ? 'Deleting...' : 'Delete to Archive'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

@@ -67,7 +67,7 @@ export default function ComponentToggler({
       const updated = {
         ...components,
         [componentName]: {
-          ...(components[componentName] || {}),
+          ...components[componentName],
           enabled,
         },
       };
@@ -83,7 +83,7 @@ export default function ComponentToggler({
       const updated = {
         ...components,
         [componentName]: {
-          ...(components[componentName] || {}),
+          ...components[componentName],
           [optionKey]: value,
         },
       };

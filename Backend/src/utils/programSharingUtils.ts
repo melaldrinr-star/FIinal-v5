@@ -30,6 +30,7 @@ import {
   LinkValidationResult,
   ProgramDetailsForSharing,
 } from '@/types/programSharing';
+import { getUTCNow, toISOUTC, createUTCDate } from '@/lib/timezone';
 
 /**
  * Default configuration for link generation
@@ -88,15 +89,19 @@ export function generateShareableLink(
   // Calculate expiration if configured
   let expiresAt: string | undefined;
   if (finalConfig.expirationDays && finalConfig.expirationDays > 0) {
-    expiresAt = new Date(
-      Date.now() + finalConfig.expirationDays * 24 * 60 * 60 * 1000
-    ).toISOString();
+    expiresAt = toISOUTC(
+      createUTCDate(
+        getUTCNow().getUTCFullYear(),
+        getUTCNow().getUTCMonth(),
+        getUTCNow().getUTCDate() + finalConfig.expirationDays
+      )
+    );
   }
 
   return {
     url,
     programId,
-    generatedAt: new Date().toISOString(),
+    generatedAt: toISOUTC(getUTCNow()),
     expiresAt,
     og,
   };

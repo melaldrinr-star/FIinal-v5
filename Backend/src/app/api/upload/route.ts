@@ -5,6 +5,10 @@ import { handleOptionsRequest } from '@/middleware/cors';
 import { withErrorHandler } from '@/middleware/errorHandler';
 import { requireAuthAsync } from '@/middleware/auth';
 import { errorResponse } from '@/utils/responses';
+import { checkRateLimit, getRateLimitKey } from '@/utils/rateLimit';
+import { detectCompressionBomb } from '@/lib/security/decompression-bomb';
+import { scanFileForMalware } from '@/lib/security/malware-scanner';
+import { activityLogService } from '@/services/activityLogService';
 
 // Note: Body size limits are configured in next.config.js
 // App Router handles JSON body parsing automatically
@@ -70,22 +74,161 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const authResult = await requireAuthAsync(request);
   if ('error' in authResult) return authResult.error as NextResponse;
 
+  const { user } = authResult;
+  const userId = user.userId;
+  const tenantId = user.tenantId;
+
+  // Apply rate limiting: 10 uploads per user per hour
+  const rlKey = getRateLimitKey(request, 'upload');
+  const rlResponse = checkRateLimit(rlKey, {
+    limit: 10,
+    windowMs: 60 * 60 * 1000, // 1 hour
+  });
+  if (rlResponse) return rlResponse;
+
   const body = await request.json();
 
   // Validate input with Zod schema
   const validationResult = FileUploadSchema.safeParse(body);
   if (!validationResult.success) {
     const errors = validationResult.error.errors.map(e => e.message);
+    
+    // Task 20.3: Log validation failures
+    await activityLogService.logAction(
+      userId,
+      'file_validation_failed',
+      'file',
+      'unknown',
+      {
+        reason: 'invalid_upload_request',
+        errors,
+        category: body.category,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
     return errorResponse(errors.join('; '), 400);
   }
 
   const { file, category, filename, prefix } = validationResult.data;
 
+  // Decode base64 file data
+  const base64Data = file.replace(/^data:.*?;base64,/, '');
+  const fileBuffer = Buffer.from(base64Data, 'base64');
+
+  // ponytail: simple decompression bomb detection (upgrade: ClamAV for production)
+  const bombCheck = await detectCompressionBomb(fileBuffer, undefined, filename);
+  if (bombCheck.isBomb) {
+    // Task 20.3: Log compression bomb detection as security event
+    await activityLogService.logAction(
+      userId,
+      'file_upload_rejected',
+      'file',
+      'unknown',
+      {
+        reason: 'compression_bomb_detected',
+        filename,
+        fileSize: fileBuffer.length,
+        compressionRatio: bombCheck.ratio,
+        category,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
+    return errorResponse(`File rejected: potential compression bomb (${bombCheck.reason})`, 400);
+  }
+
+  // Task 23: Malware scanning for uploaded files
+  // ponytail: signature-based detection (upgrade: ClamAV or VirusTotal API for production)
+  const malwareScan = scanFileForMalware(fileBuffer, filename);
+  if (malwareScan.isMalicious) {
+    // Task 20.3: Log malware detection as critical security event
+    await activityLogService.logAction(
+      userId,
+      'file_upload_rejected',
+      'file',
+      'unknown',
+      {
+        reason: 'malware_detected',
+        filename,
+        fileSize: fileBuffer.length,
+        threatType: malwareScan.threatType,
+        threatReason: malwareScan.reason,
+        fileHash: malwareScan.fileHash,
+        confidence: malwareScan.confidence,
+        category,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
+    return errorResponse(`File rejected: potential malware detected (${malwareScan.reason})`, 403);
+  }
+
+  // Task 20.3: Log successful malware scan
+  await activityLogService.logAction(
+    userId,
+    'file_scanned',
+    'file',
+    'unknown',
+    {
+      filename,
+      fileSize: fileBuffer.length,
+      fileHash: malwareScan.fileHash,
+      scanMethod: malwareScan.scanMethod,
+      scanResult: 'clean',
+      category,
+      timestamp: new Date().toISOString(),
+    },
+    request,
+    tenantId
+  );
+
   const result = await uploadFile(file, category, filename, prefix);
 
   if (!result.success) {
+    // Task 20.3: Log upload failure
+    await activityLogService.logAction(
+      userId,
+      'file_upload_failed',
+      'file',
+      'unknown',
+      {
+        reason: result.error || 'unknown_error',
+        filename,
+        fileSize: fileBuffer.length,
+        category,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
     return errorResponse(result.error || 'Upload failed', 400);
   }
+
+  // Task 20.3: Log successful file upload (audit trail for sensitive file operations)
+  await activityLogService.logAction(
+    userId,
+    'file_upload',
+    'file',
+    result.filePath || 'unknown',
+    {
+      filename,
+      fileSize: fileBuffer.length,
+      category,
+      filePath: result.filePath,
+      timestamp: new Date().toISOString(),
+      status: 'success',
+    },
+    request,
+    tenantId
+  );
 
   return NextResponse.json({
     success: true,
@@ -111,20 +254,71 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   const authResult = await requireAuthAsync(request);
   if ('error' in authResult) return authResult.error as NextResponse;
 
+  const { user } = authResult;
+  const userId = user.userId;
+  const tenantId = user.tenantId;
+
   const body = await request.json();
   const { filePath } = body || {};
 
   // Validate filePath
   if (!filePath || typeof filePath !== 'string') {
+    // Task 20.3: Log validation failure
+    await activityLogService.logAction(
+      userId,
+      'file_operation_rejected',
+      'file',
+      'unknown',
+      {
+        reason: 'invalid_file_path',
+        operation: 'delete',
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
     return errorResponse('filePath is required and must be a string', 400);
   }
 
   if (filePath.length > 500) {
+    // Task 20.3: Log suspicious operation
+    await activityLogService.logAction(
+      userId,
+      'file_operation_rejected',
+      'file',
+      'unknown',
+      {
+        reason: 'file_path_too_long',
+        operation: 'delete',
+        pathLength: filePath.length,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
     return errorResponse('filePath is too long', 400);
   }
 
   // Prevent path traversal attempts
   if (filePath.includes('..') || !filePath.startsWith('/uploads/')) {
+    // Task 20.3: Log path traversal attempt
+    await activityLogService.logAction(
+      userId,
+      'file_operation_rejected',
+      'file',
+      'unknown',
+      {
+        reason: 'path_traversal_attempt',
+        operation: 'delete',
+        suspiciousPath: filePath,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
     return errorResponse('Invalid file path', 400);
   }
 
@@ -133,11 +327,44 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
     : await deleteFile(filePath);
 
   if (!deleted) {
+    // Task 20.3: Log deletion failure
+    await activityLogService.logAction(
+      userId,
+      'file_delete_failed',
+      'file',
+      filePath,
+      {
+        reason: 'deletion_error',
+        filePath,
+        timestamp: new Date().toISOString(),
+      },
+      request,
+      tenantId
+    );
+    
     return errorResponse('Failed to delete file', 400);
   }
+
+  // Task 20.3: Log successful file deletion
+  await activityLogService.logAction(
+    userId,
+    'file_deleted',
+    'file',
+    filePath,
+    {
+      filePath,
+      operation: 'delete',
+      timestamp: new Date().toISOString(),
+      status: 'success',
+    },
+    request,
+    tenantId
+  );
 
   return NextResponse.json({
     success: true,
     message: 'File deleted successfully',
   });
 });
+
+

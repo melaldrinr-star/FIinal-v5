@@ -30,11 +30,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
 import fc from 'fast-check';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
 } from '../components/ui/select';
 
 // =========================================================================

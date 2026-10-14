@@ -128,8 +128,8 @@ if (startDate) activityQuery = activityQuery.gte('created_at', startDate);
     { data: users, error: usersError },
   ] = await Promise.all([
     user.role !== 'super_admin'
-      ? supabaseAdmin.from('items').select('id, category, status, quantity, available_quantity').eq('tenant_id', user.tenantId)
-      : supabaseAdmin.from('items').select('id, category, status, quantity, available_quantity'),
+      ? supabaseAdmin.from('items').select('id, category, status, quantity, available_quantity').eq('tenant_id', user.tenantId).is('deleted_at', null)
+      : supabaseAdmin.from('items').select('id, category, status, quantity, available_quantity').is('deleted_at', null),
     traineesQuery,
     enrollmentsQuery,
     programsQuery,

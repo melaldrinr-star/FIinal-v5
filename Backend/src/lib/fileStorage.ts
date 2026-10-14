@@ -377,7 +377,7 @@ function buildThumbnailFilename(filename: string): string {
  * Guard against path-traversal via filenames.
  * Throws if the filename contains directory separators or is empty.
  */
-function assertSafeFilename(filename: string): void {
+export function assertSafeFilename(filename: string): void {
   if (!filename || filename.includes('/') || filename.includes('\\') || filename.includes('..')) {
     throw new Error(`Unsafe filename: "${filename}"`);
   }

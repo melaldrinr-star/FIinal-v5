@@ -28,6 +28,8 @@ export interface Item {
   created_at: string;
   updated_at: string;
   created_by: string;
+  tenant_id?: string;
+  deleted_at?: string | null;
 }
 
 export interface Trainee {
@@ -89,6 +91,7 @@ export interface Program {
   tenant_id?: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string | null;
 }
 
 export interface Lending {

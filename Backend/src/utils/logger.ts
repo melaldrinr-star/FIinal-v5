@@ -1,8 +1,10 @@
+import { toISOUTC, getUTCNow } from '@/lib/timezone';
+
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 class Logger {
   private log(level: LogLevel, message: string, meta?: any) {
-    const timestamp = new Date().toISOString();
+    const timestamp = toISOUTC(getUTCNow());
     const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
     
     switch (level) {

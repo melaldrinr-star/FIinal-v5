@@ -2,6 +2,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { sanitizePath } from '@/lib/security';
 
 // Allowed file types
 const ALLOWED_IMAGE_TYPES = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif'];
@@ -56,13 +57,11 @@ interface UploadResult {
 }
 
 /**
- * Sanitize filename to remove special characters and spaces
+ * Sanitize filename to remove special characters and path traversal attempts
+ * Uses centralized sanitizePath() from security module (ponytail: reuse existing validator)
  */
 function sanitizeFilename(filename: string): string {
-  return filename
-    .toLowerCase()
-    .replace(/[^a-z0-9._-]/g, '_')
-    .replace(/_{2,}/g, '_');
+  return sanitizePath(filename).toLowerCase();
 }
 
 /**
@@ -157,7 +156,7 @@ async function ensureDir(dirPath: string): Promise<void> {
   }
 }
 
-function normalizeUploadPath(inputPath: string): string | null {
+export function normalizeUploadPath(inputPath: string): string | null {
   if (!inputPath || typeof inputPath !== 'string') {
     return null;
   }
@@ -228,7 +227,7 @@ export function getThumbnailPathForImagePath(imagePath: string | null | undefine
   // and tenant-scoped paths (/uploads/{uuid}/images/{category}/{filename})
 
 const legacyMatch = normalizedImagePath.match(/^\/uploads\/images\/([^/]+)\/(.+)$/);
-  const tenantMatch = normalizedImagePath.match(/^\/uploads\/([0-9a-fA-F\-]+)\/images\/([^/]+)\/(.+)$/);
+  const tenantMatch = normalizedImagePath.match(/^\/uploads\/([0-9a-fA-F-]+)\/images\/([^/]+)\/(.+)$/);
 
   let category: string | undefined;
   let remainder: string | undefined;

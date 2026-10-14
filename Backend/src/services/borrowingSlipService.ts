@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { TenantContext } from '@/middleware/tenantContext';
+import { formatUTC, getUTCNow } from '@/lib/timezone';
 
 export interface BorrowingSlip {
   id: string;
@@ -41,14 +42,15 @@ export class BorrowingSlipService {
    * Format: SLIP-YYYYMMDD-XXXX (where XXXX is sequence number)
    */
   private async generateSlipNumber(tenantId: string): Promise<string> {
-    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const now = getUTCNow();
+    const today = now.toISOString().split('T')[0].replace(/-/g, '');
     
     // Get count of slips created today for this tenant
     const { count, error } = await supabaseAdmin
       .from('borrowing_slips')
       .select('*', { count: 'exact', head: true })
       .eq('tenant_id', tenantId)
-      .gte('created_at', new Date().toISOString().split('T')[0]);
+      .gte('created_at', now.toISOString().split('T')[0]);
     
     if (error) throw error;
     
@@ -68,8 +70,8 @@ export class BorrowingSlipService {
     // Generate unique slip number
     const slipNumber = await this.generateSlipNumber(tenantId);
     
-    // Current date as borrowing date
-    const borrowingDate = new Date().toISOString().split('T')[0];
+    // Current date as borrowing date (UTC)
+    const borrowingDate = getUTCNow().toISOString().split('T')[0];
     
     const newSlip = {
       tenant_id: tenantId,
@@ -217,7 +219,7 @@ export class BorrowingSlipService {
   async getOverdueBorrowingSlips(
     context: TenantContext | null
   ): Promise<BorrowingSlip[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getUTCNow().toISOString().split('T')[0];
     
     let query = supabaseAdmin
       .from('borrowing_slips')
@@ -266,7 +268,7 @@ export class BorrowingSlipService {
 
     const updateData = {
       status: 'returned',
-      returned_at: new Date().toISOString(),
+      returned_at: getUTCNow().toISOString(),
       ...(notes && { notes: slip.notes ? `${slip.notes}\n${notes}` : notes }),
     };
 
@@ -286,7 +288,7 @@ export class BorrowingSlipService {
    * Marks active slips as overdue if due_date has passed
    */
   async updateOverdueStatus(tenantId?: string): Promise<number> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getUTCNow().toISOString().split('T')[0];
     
     let query = supabaseAdmin
       .from('borrowing_slips')
@@ -332,7 +334,7 @@ export class BorrowingSlipService {
     overdue: number;
     dueToday: number;
   }> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getUTCNow().toISOString().split('T')[0];
 
     let baseQuery = supabaseAdmin.from('borrowing_slips').select('*');
     

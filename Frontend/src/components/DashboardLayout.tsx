@@ -40,6 +40,7 @@ import {
   Activity as ActivityIcon,
   ClipboardList,
   BookOpen,
+  Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -82,6 +83,7 @@ const NAVIGATION_ARRAYS = {
         { name: 'Non-Attendance Dates', href: '/non-attendance-dates', icon: Calendar, permission: 'canManagePrograms' as const },
         { name: 'Landing Content', href: '/admin/landing-content', icon: FileText, permission: 'canManageCMS' as const },
         { name: 'Requirements Management', href: '/admin/requirements', icon: BookOpen, permission: 'canManagePrograms' as const },
+        { name: 'Archive', href: '/admin/archive', icon: Trash2, permission: 'canManageAccounts' as const },
         { name: 'Account', href: '/account-management', icon: UserCog, permission: 'canManageAccounts' as const },
       ]
     },

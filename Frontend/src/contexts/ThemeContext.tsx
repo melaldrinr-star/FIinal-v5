@@ -42,6 +42,29 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme must be used within ThemeProvider');
+  
+  // If context is undefined (hook called outside ThemeProvider),
+  // return safe default values instead of throwing an error.
+  // This allows components to render gracefully with default theme.
+  if (!context) {
+    // Optional debug-level warning for developers to identify components
+    // not wrapped in ThemeProvider during development
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(
+        '[ThemeContext] useTheme hook called outside ThemeProvider. ' +
+        'Using safe default values (isDark: false, toggleTheme: no-op). ' +
+        'Wrap your component in ThemeProvider to enable theme switching.'
+      );
+    }
+    
+    // Return safe default values
+    return {
+      isDark: false,
+      toggleTheme: () => {
+        // No-op function for safe fallback
+      },
+    };
+  }
+  
   return context;
 }

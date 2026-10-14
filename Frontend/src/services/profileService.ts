@@ -58,7 +58,7 @@ export function validatePhone(phone: string): boolean {
   }
 
   // Remove common formatting characters
-  const cleaned = phone.replace(/[\s\-\(\)\.]/g, '');
+  const cleaned = phone.replace(/[\s\-(\).]/g, '');
 
   // Check if it contains only digits and is reasonable length (7-15 digits)
   // Supports international format

@@ -17,6 +17,7 @@ export class ItemService {
     category?: string;
     status?: string;
     search?: string;
+    includeDeleted?: boolean;
   }): Promise<Item[]> {
     let query = supabaseAdmin.from('items').select('*');
 
@@ -24,6 +25,11 @@ export class ItemService {
 
 if (context && !context.isSuperAdmin) {
       query = query.eq('tenant_id', context.tenantId);
+    }
+
+    // Filter out soft-deleted items by default (exclude where deleted_at IS NOT NULL)
+    if (!filters?.includeDeleted) {
+      query = query.is('deleted_at', null);
     }
 
 if (filters?.category) {
@@ -49,7 +55,7 @@ if (filters?.search) {
   }
 
   async getItemById(context: TenantContext | null, id: string): Promise<Item | null> {
-    let query = supabaseAdmin.from('items').select('*').eq('id', id);
+    let query = supabaseAdmin.from('items').select('*').eq('id', id).is('deleted_at', null);
 
     // Apply tenant filtering for non-super-admin users
 
@@ -127,11 +133,17 @@ const imageWasUpdated = Object.prototype.hasOwnProperty.call(itemData, 'image_pa
 
   async deleteItem(id: string): Promise<void> {
     const existingItem = await this.getItemById(null, id);
-    await db.delete('items', id);
-
-    if (existingItem?.image_path) {
-      await deleteImageWithThumbnail(existingItem.image_path);
+    if (!existingItem) {
+      throw new Error('Item not found');
     }
+
+    // Soft delete: set deleted_at timestamp instead of hard delete
+    await db.update<Item>('items', id, {
+      deleted_at: new Date().toISOString(),
+    });
+
+    // Note: Images are retained for archival purposes; they're not deleted during soft delete
+    // Images are only deleted on permanent purge from the archive
   }
 
   async updateItemQuantity(
@@ -179,7 +191,8 @@ const status = this.calculateItemStatus(newAvailableQuantity, item.minimum_quant
     let query = supabaseAdmin
       .from('items')
       .select('*')
-      .eq('qr_code', qrCode);
+      .eq('qr_code', qrCode)
+      .is('deleted_at', null);
 
     // Apply tenant filtering for non-super-admin users
 

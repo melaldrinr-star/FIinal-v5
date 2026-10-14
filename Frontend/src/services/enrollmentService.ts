@@ -151,17 +151,24 @@ class EnrollmentService {
   private wsInitialized = false;
 
   constructor() {
-    // Initialize WebSocket client on service creation
-    this.initializeWebSocketClient();
+    // WebSocket client initialization moved to lazy initialization pattern
+    // see initializeWebSocketClient() method - it's called on first use
   }
 
   /**
-   * Initialize WebSocket client with event handlers
-   * Sets up handlers for enrollment updates, additions, and removals
+   * Initialize WebSocket client with event handlers (lazy initialization)
+   * Delays WebSocket setup until actually needed, rather than on constructor
+   * This prevents connection errors from appearing on app startup when no server is running
    * 
-   * Requirement 2.1: Automatically subscribe to enrollments when fetched
+   * Implements guard clause to prevent duplicate handler setup:
+   * - Returns existing promise if initialization already started
+   * - Prevents multiple simultaneous initialization attempts
+   * - Wraps initialization in try-catch to suppress any errors
+   * 
+   * Requirement 2.1, 3.1, 3.3
    */
   private initializeWebSocketClient(): void {
+    // Guard clause: return if initialization already in progress or completed
     if (this.wsInitializationPromise) {
       return;
     }
@@ -171,10 +178,16 @@ class EnrollmentService {
 
   /**
    * Setup WebSocket event handlers for real-time updates
+   * Wrapped in try-catch to suppress initialization errors
    * Requirement 2.1, 4.2, 4.4, 4.5, 4.6, 4.7
    */
   private async setupWebSocketHandlers(): Promise<void> {
     try {
+      // Guard clause: prevent duplicate handler setup
+      if (this.wsInitialized) {
+        return;
+      }
+
       // Setup handler for enrollment updates
       const unsubscribeUpdated = websocketClient.onEnrollmentUpdated((enrollment) => {
         this.handleEnrollmentUpdated(enrollment);
@@ -197,7 +210,8 @@ class EnrollmentService {
 
       this.wsInitialized = true;
     } catch (error) {
-      console.error('Failed to setup WebSocket handlers:', error);
+      console.debug('[EnrollmentService] WebSocket handler initialization suppressed:', error);
+      // Suppress initialization errors - REST API fallback will be used
     }
   }
 
@@ -328,11 +342,15 @@ class EnrollmentService {
 
   /**
    * Subscribe to WebSocket updates for a list of enrollments
+   * Implements lazy WebSocket initialization - initializes on first use
    * Requirement 2.1, 2.5
    * 
    * @param enrollments - Array of enrollments to subscribe to
    */
   private subscribeToEnrollments(enrollments: Enrollment[]): void {
+    // Lazy initialization: trigger setup on first use
+    this.initializeWebSocketClient();
+
     // Only subscribe if WebSocket is initialized
     if (!this.wsInitialized) {
       return;

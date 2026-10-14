@@ -3,6 +3,8 @@ import { generateOpaqueToken, hashOpaqueToken, hashPassword } from '@/lib/auth';
 
 const REFRESH_TOKEN_EXPIRES_DAYS = Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 14);
 const RESET_TOKEN_EXPIRES_MINUTES = Number(process.env.RESET_TOKEN_EXPIRES_MINUTES || 60);
+const MAX_FAILED_ATTEMPTS = Number(process.env.MAX_FAILED_LOGIN_ATTEMPTS || 5);
+const LOCKOUT_DURATION_MINUTES = Number(process.env.LOCKOUT_DURATION_MINUTES || 15);
 
 export interface TokenRequestMeta {
   ip?: string;
@@ -282,6 +284,130 @@ if (request.completed_at) throw new Error('Reset token has already been used');
     if (requestUpdateError) throw requestUpdateError;
 
     return request.user_id;
+  }
+
+  /**
+   * Track a failed login attempt for a user.
+   * Increments the counter and locks the account if max attempts exceeded.
+   */
+  async trackFailedLoginAttempt(userId: string): Promise<void> {
+    const now = new Date();
+    const lockedUntil = new Date(now.getTime() + LOCKOUT_DURATION_MINUTES * 60 * 1000).toISOString();
+
+    const { data: existing, error: fetchError } = await supabaseAdmin
+      .from('account_lockouts')
+      .select('failed_attempts, locked_until')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (!existing) {
+      // First failed attempt
+      const { error } = await supabaseAdmin
+        .from('account_lockouts')
+        .insert({
+          user_id: userId,
+          failed_attempts: 1,
+          locked_until: null,
+        });
+      if (error) throw error;
+    } else {
+      // Increment attempts
+      const newAttempts = existing.failed_attempts + 1;
+      const newLockedUntil = newAttempts >= MAX_FAILED_ATTEMPTS ? lockedUntil : null;
+
+      const { error } = await supabaseAdmin
+        .from('account_lockouts')
+        .update({
+          failed_attempts: newAttempts,
+          locked_until: newLockedUntil,
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+    }
+  }
+
+  /**
+   * Check if an account is currently locked.
+   * Automatically unlocks if lockout duration has passed.
+   */
+  async isAccountLocked(userId: string): Promise<boolean> {
+    const { data, error } = await supabaseAdmin
+      .from('account_lockouts')
+      .select('locked_until')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data || !data.locked_until) return false;
+
+    const now = new Date();
+    const lockedUntil = new Date(data.locked_until);
+
+    if (now >= lockedUntil) {
+      // Lockout duration has passed, auto-unlock
+      await this.unlockAccount(userId);
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Get remaining lockout time in seconds, or null if not locked.
+   */
+  async getLockedUntil(userId: string): Promise<Date | null> {
+    const { data, error } = await supabaseAdmin
+      .from('account_lockouts')
+      .select('locked_until')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data || !data.locked_until) return null;
+
+    const lockedUntil = new Date(data.locked_until);
+    const now = new Date();
+
+    if (now >= lockedUntil) {
+      // Lockout has expired
+      await this.unlockAccount(userId);
+      return null;
+    }
+
+    return lockedUntil;
+  }
+
+  /**
+   * Reset failed login attempts when login succeeds.
+   */
+  async resetFailedLoginAttempts(userId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('account_lockouts')
+      .update({
+        failed_attempts: 0,
+        locked_until: null,
+      })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Manually unlock an account.
+   */
+  async unlockAccount(userId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from('account_lockouts')
+      .update({
+        failed_attempts: 0,
+        locked_until: null,
+      })
+      .eq('user_id', userId);
+
+    if (error) throw error;
   }
 }
 

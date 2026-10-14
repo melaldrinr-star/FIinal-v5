@@ -129,6 +129,7 @@ const { data: program, error: programError } = await supabaseAdmin
     .select('id, tenant_id, name, status, enrollment_limit')
     .eq('id', validatedData.program_id)
     .eq('tenant_id', tenantId)
+    .is('deleted_at', null)
     .maybeSingle();
   if (programError) throw programError;
   if (!program) {
